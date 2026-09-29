@@ -1,42 +1,107 @@
-//core modules
+// Core Modules
 const fs = require('fs');
 const path = require('path');
 const rootDir = require('../utils/pathUtil');
 
+const homeDataPath = path.join(rootDir, 'data', 'homes.json');
 
-//fake database
-let registeredHomes = [];
+const getHomesFromFile = (callback) => {
+  fs.readFile(homeDataPath, (err, data) => {
+    if (err || !data || data.length === 0) {
+      return callback([]);
+    }
+    try {
+      const homes = JSON.parse(data);
+      let updated = false;
+      homes.forEach((home, index) => {
+        if (!home.id) {
+          home.id = (index + 1).toString();
+          updated = true;
+        }
+        if (!home.description) {
+          home.description = `Experience a delightful stay at ${home.houseName}, located in the heart of ${home.location}. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays.`;
+          updated = true;
+        }
+      });
+      if (updated) {
+        fs.writeFile(homeDataPath, JSON.stringify(homes, null, 2), () => {});
+      }
+      callback(homes);
+    } catch (e) {
+      callback([]);
+    }
+  });
+};
 
 module.exports = class Home {
-    constructor(houseName, price, location, rating, photoUrl){
-        this.houseName = houseName;
-        this.price = price;
-        this.location = location;
-        this.rating = rating;
-        this.photoUrl = photoUrl;
-    }
+  constructor(houseName, price, location, rating, photoUrl, description = '', id = null) {
+    this.id = id;
+    this.houseName = houseName;
+    this.price = price;
+    this.location = location;
+    this.rating = rating;
+    this.photoUrl = photoUrl;
+    this.description =
+      description ||
+      `Experience a delightful stay at ${houseName}, located in the heart of ${location}. Perfect for families, solo travelers, and couples seeking comfort and convenience.`;
+  }
 
-
-    save(){
-       Home.fetchAll((registeredHomes) => {
+  save(callback) {
+    getHomesFromFile((registeredHomes) => {
+      if (this.id) {
+        // Edit / update existing home
+        const existingIndex = registeredHomes.findIndex(
+          (h) => h.id.toString() === this.id.toString()
+        );
+        if (existingIndex >= 0) {
+          registeredHomes[existingIndex] = {
+            id: this.id,
+            houseName: this.houseName,
+            price: this.price,
+            location: this.location,
+            rating: this.rating,
+            photoUrl: this.photoUrl,
+            description: this.description || registeredHomes[existingIndex].description
+          };
+        } else {
+          registeredHomes.push(this);
+        }
+      } else {
+        // New home registration
+        this.id = Date.now().toString();
         registeredHomes.push(this);
-        const homeDataPath = path.join(rootDir, 'data', 'homes.json');
-        fs.writeFile(homeDataPath, JSON.stringify(registeredHomes), error => {
-            console.log("file writing concluded", error);
+      }
+
+      fs.writeFile(homeDataPath, JSON.stringify(registeredHomes, null, 2), (error) => {
+        if (callback) callback(error);
+      });
+    });
+  }
+
+  static fetchAll(callback) {
+    getHomesFromFile(callback);
+  }
+
+  static findById(id, callback) {
+    getHomesFromFile((homes) => {
+      const home = homes.find((h) => h.id.toString() === id.toString());
+      callback(home);
+    });
+  }
+
+  static deleteById(id, callback) {
+    getHomesFromFile((homes) => {
+      const updatedHomes = homes.filter((h) => h.id.toString() !== id.toString());
+      fs.writeFile(homeDataPath, JSON.stringify(updatedHomes, null, 2), (err) => {
+        // Clean up linked favorites and bookings
+        const Favorite = require('./favorite');
+        const Booking = require('./booking');
+        Favorite.deleteByHomeId(id, () => {
+          Booking.deleteByHomeId(id, () => {
+            if (callback) callback(err);
+          });
         });
-       })
-
-    } 
-
-    static fetchAll(callback){
-        const homeDataPath = path.join(rootDir, 'data', 'homes.json');
-        fs.readFile(homeDataPath, (err, data) => {
-            console.log("file read:", err, data);
-            if (!err) {
-                 registeredHomes = JSON.parse(data);
-            }
-           callback (registeredHomes);
-        });
-    }
-
-}
+      });
+    });
+  }
+};

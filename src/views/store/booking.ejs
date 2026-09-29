@@ -1,11 +1,101 @@
 <%- include('../partials/head') %>
   </head>
-  <body>
+  <body class="bg-gray-50 min-h-screen flex flex-col justify-between">
     <%- include('../partials/nav') %>
-    <main class="container mx-auto mt-20 text-center">
-      <h2 class="text-6xl font-bold text-red-500 mb-4">My Bookings</h2> 
-      <p class="text-2xl text-gray-700 mb-8">Bookings will appear here</p>
-     
+
+    <main class="container mx-auto px-4 py-8 max-w-5xl">
+      <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900">Your Trips & Bookings</h1>
+        <p class="text-gray-500 mt-1">Manage and track your upcoming reservations</p>
+      </div>
+
+      <% if (!bookings || bookings.length === 0) { %>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center max-w-xl mx-auto">
+          <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+            <i class="fas fa-calendar-times"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-800 mb-2">No trips booked... yet!</h2>
+          <p class="text-gray-500 mb-6">Time to dust off your bags and start planning your next great getaway.</p>
+          <a href="/homes" class="inline-block bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-xl shadow transition duration-200">
+            Start Searching
+          </a>
+        </div>
+      <% } else { %>
+        <div class="space-y-6">
+          <% bookings.forEach(booking => { %>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row gap-6 hover:shadow-md transition">
+              <!-- Thumbnail -->
+              <div class="w-full md:w-56 h-44 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                <img 
+                  src="<%= booking.photoUrl %>" 
+                  alt="<%= booking.houseName %>" 
+                  onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500';"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+
+              <!-- Info -->
+              <div class="flex-grow flex flex-col justify-between">
+                <div>
+                  <div class="flex flex-wrap justify-between items-start gap-2 mb-2">
+                    <div>
+                      <span class="inline-block bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full mb-1">
+                        <i class="fas fa-check-circle mr-1"></i><%= booking.status || 'Confirmed' %>
+                      </span>
+                      <h3 class="text-xl font-bold text-gray-900"><%= booking.houseName %></h3>
+                      <p class="text-sm text-gray-500"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i><%= booking.location %></p>
+                    </div>
+
+                    <div class="text-right">
+                      <div class="text-xl font-black text-red-500">₹<%= Number(booking.totalAmount).toLocaleString('en-IN') %></div>
+                      <div class="text-xs text-gray-400">Total Price</div>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 my-3 bg-gray-50 p-3 rounded-xl text-xs text-gray-700">
+                    <div>
+                      <span class="text-gray-400 block">Check-in</span>
+                      <span class="font-bold text-sm"><%= booking.checkIn %></span>
+                    </div>
+                    <div>
+                      <span class="text-gray-400 block">Check-out</span>
+                      <span class="font-bold text-sm"><%= booking.checkOut %></span>
+                    </div>
+                    <div>
+                      <span class="text-gray-400 block">Guests</span>
+                      <span class="font-bold text-sm"><%= booking.guestsCount %> Guest(s)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between pt-3 border-t border-gray-100 gap-3">
+                  <div class="text-xs text-gray-400">
+                    Reserved for <span class="font-semibold text-gray-700"><%= booking.guestName %></span> &middot; <%= booking.bookedAt %>
+                  </div>
+
+                  <div class="flex items-center gap-3">
+                    <a href="/homes/<%= booking.homeId %>" class="text-sm font-semibold text-gray-700 hover:text-red-500 transition">
+                      View Home
+                    </a>
+                    <form action="/cancel-booking" method="POST" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                      <input type="hidden" name="bookingId" value="<%= booking.id %>" />
+                      <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-4 py-2 rounded-lg text-sm transition">
+                        Cancel Booking
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
     </main>
+
+    <footer class="bg-white border-t border-gray-200 py-6 mt-12 text-center text-sm text-gray-500">
+      <div class="container mx-auto px-4">
+        <p>&copy; 2026 Airbnb, Inc. All rights reserved &middot; Privacy &middot; Terms &middot; Sitemap</p>
+      </div>
+    </footer>
   </body>
 </html>

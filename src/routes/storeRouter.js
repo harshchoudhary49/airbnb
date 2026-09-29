@@ -1,16 +1,24 @@
 // Core Modules
-const path = require('path');
-
-// External Module
 const express = require('express');
 const storeRouter = express.Router();
 
 // Local Module
-const { registeredHomes } = require('../controllers/store-controller.js');
-const homesController = require("../controllers/store-controller.js");
+const storeController = require('../controllers/store-controller');
 
-storeRouter.get("/", homesController.getIndex);
-storeRouter.get("/bookings", homesController.getbooking);
-storeRouter.get("/homes", homesController.getHomes);
-storeRouter.get("/favorites", homesController.getfavoritelist);
+// Browsing & Home Listings
+storeRouter.get('/', storeController.getIndex);
+storeRouter.get('/homes', storeController.getHomes);
+storeRouter.get('/homes/:homeId', storeController.getHomeDetails);
+
+// Reservations & Bookings
+storeRouter.get('/reserve/:homeId', storeController.getReserveHome);
+storeRouter.post('/reserve', storeController.postReserveHome);
+storeRouter.get('/bookings', storeController.getBookings);
+storeRouter.post('/cancel-booking', storeController.postCancelBooking);
+
+// Favorites / Wishlist
+storeRouter.get('/favorites', storeController.getfavoritelist);
+storeRouter.post('/favorites/add', storeController.postAddToFavorites);
+storeRouter.post('/favorites/remove', storeController.postRemoveFromFavorites);
+
 module.exports = storeRouter;

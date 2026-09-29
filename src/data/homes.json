@@ -1,1 +1,200 @@
-[{"houseName":"Modern Downtown Apartment","price":"2500","location":"Mumbai","rating":"4.5","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Spacious Villa with Garden","price":"5000","location":"Pune","rating":"4.8","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Cozy Studio in City Center","price":"1800","location":"Delhi","rating":"4.2","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Luxury Penthouse Suite","price":"8000","location":"Bangalore","rating":"4.9","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Charming Cottage Retreat","price":"3000","location":"Goa","rating":"4.6","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Elegant Townhouse","price":"4000","location":"Chennai","rating":"4.4","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Rustic Farmhouse Stay","price":"2200","location":"Jaipur","rating":"4.1","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Beachfront Bungalow","price":"6000","location":"Kerala","rating":"4.7","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Urban Loft Apartment","price":"3500","location":"Hyderabad","rating":"4.3","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Tranquil Mountain Cabin","price":"2800","location":"Shimla","rating":"4.5","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Historic Heritage Home","price":"4500","location":"Agra","rating":"4.6","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Minimalist Modern Home","price":"3200","location":"Ahmedabad","rating":"4.2","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Seaside Villa","price":"5500","location":"Pondicherry","rating":"4.8","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Cosy Suburban House","price":"2600","location":"Noida","rating":"4.0","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Luxurious Mansion","price":"10000","location":"Gurgaon","rating":"4.9","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Quaint Countryside Cottage","price":"1900","location":"Udaipur","rating":"4.3","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Stylish City Apartment","price":"3700","location":"Kolkata","rating":"4.4","photoUrl":"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400"},{"houseName":"Serene Lakeview Home","price":"4200","location":"Bhopal","rating":"4.5","photoUrl":"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400"},{"houseName":"Saini villa","price":"10000","location":"delhi","rating":"5","photoUrl":"https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400"},{"houseName":"manoj's villa","price":"25000","location":"udaipur, rajasthan","rating":"4","photoUrl":"https://t3.ftcdn.net/jpg/02/70/24/14/360_F_270241491_omQn1uRL9FI0u1IG23TgQnQyD4maepDJ.jpg"}]
+[
+  {
+    "houseName": "Modern Downtown Apartment",
+    "price": "2500",
+    "location": "Mumbai",
+    "rating": "4.5",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "1",
+    "description": "Experience a delightful stay at Modern Downtown Apartment, located in the heart of Mumbai. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Spacious Villa with Garden",
+    "price": "5000",
+    "location": "Pune",
+    "rating": "4.8",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "2",
+    "description": "Experience a delightful stay at Spacious Villa with Garden, located in the heart of Pune. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Cozy Studio in City Center",
+    "price": "1800",
+    "location": "Delhi",
+    "rating": "4.2",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "3",
+    "description": "Experience a delightful stay at Cozy Studio in City Center, located in the heart of Delhi. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Luxury Penthouse Suite",
+    "price": "8000",
+    "location": "Bangalore",
+    "rating": "4.9",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "4",
+    "description": "Experience a delightful stay at Luxury Penthouse Suite, located in the heart of Bangalore. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Charming Cottage Retreat",
+    "price": "3000",
+    "location": "Goa",
+    "rating": "4.6",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "5",
+    "description": "Experience a delightful stay at Charming Cottage Retreat, located in the heart of Goa. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Elegant Townhouse",
+    "price": "4000",
+    "location": "Chennai",
+    "rating": "4.4",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "6",
+    "description": "Experience a delightful stay at Elegant Townhouse, located in the heart of Chennai. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Rustic Farmhouse Stay",
+    "price": "2200",
+    "location": "Jaipur",
+    "rating": "4.1",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "7",
+    "description": "Experience a delightful stay at Rustic Farmhouse Stay, located in the heart of Jaipur. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Beachfront Bungalow",
+    "price": "6000",
+    "location": "Kerala",
+    "rating": "4.7",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "8",
+    "description": "Experience a delightful stay at Beachfront Bungalow, located in the heart of Kerala. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Urban Loft Apartment",
+    "price": "3500",
+    "location": "Hyderabad",
+    "rating": "4.3",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "9",
+    "description": "Experience a delightful stay at Urban Loft Apartment, located in the heart of Hyderabad. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Tranquil Mountain Cabin",
+    "price": "2800",
+    "location": "Shimla",
+    "rating": "4.5",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "10",
+    "description": "Experience a delightful stay at Tranquil Mountain Cabin, located in the heart of Shimla. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Historic Heritage Home",
+    "price": "4500",
+    "location": "Agra",
+    "rating": "4.6",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "11",
+    "description": "Experience a delightful stay at Historic Heritage Home, located in the heart of Agra. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Minimalist Modern Home",
+    "price": "3200",
+    "location": "Ahmedabad",
+    "rating": "4.2",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "12",
+    "description": "Experience a delightful stay at Minimalist Modern Home, located in the heart of Ahmedabad. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Seaside Villa",
+    "price": "5500",
+    "location": "Pondicherry",
+    "rating": "4.8",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "13",
+    "description": "Experience a delightful stay at Seaside Villa, located in the heart of Pondicherry. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Cosy Suburban House",
+    "price": "2600",
+    "location": "Noida",
+    "rating": "4.0",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "14",
+    "description": "Experience a delightful stay at Cosy Suburban House, located in the heart of Noida. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Luxurious Mansion",
+    "price": "10000",
+    "location": "Gurgaon",
+    "rating": "4.9",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "15",
+    "description": "Experience a delightful stay at Luxurious Mansion, located in the heart of Gurgaon. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Quaint Countryside Cottage",
+    "price": "1900",
+    "location": "Udaipur",
+    "rating": "4.3",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "16",
+    "description": "Experience a delightful stay at Quaint Countryside Cottage, located in the heart of Udaipur. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Stylish City Apartment",
+    "price": "3700",
+    "location": "Kolkata",
+    "rating": "4.4",
+    "photoUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400",
+    "id": "17",
+    "description": "Experience a delightful stay at Stylish City Apartment, located in the heart of Kolkata. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Serene Lakeview Home",
+    "price": "4200",
+    "location": "Bhopal",
+    "rating": "4.5",
+    "photoUrl": "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400",
+    "id": "18",
+    "description": "Experience a delightful stay at Serene Lakeview Home, located in the heart of Bhopal. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "Saini villa",
+    "price": "10000",
+    "location": "delhi",
+    "rating": "5",
+    "photoUrl": "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400",
+    "id": "19",
+    "description": "Experience a delightful stay at Saini villa, located in the heart of delhi. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "manoj's villa",
+    "price": "25000",
+    "location": "udaipur, rajasthan",
+    "rating": "4",
+    "photoUrl": "https://t3.ftcdn.net/jpg/02/70/24/14/360_F_270241491_omQn1uRL9FI0u1IG23TgQnQyD4maepDJ.jpg",
+    "id": "20",
+    "description": "Experience a delightful stay at manoj's villa, located in the heart of udaipur, rajasthan. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "bhavesh'villa",
+    "price": "20000",
+    "location": "chandigarh",
+    "rating": "5",
+    "photoUrl": "https://media.gettyimages.com/id/175537632/photo/view-of-white-house-with-garage-from-the-front.jpg?s=612x612&w=0&k=20&c=QIC7hremPlbm9fbyksvF5vXPjrParaf-Vf64O2vUp34=",
+    "id": "21",
+    "description": "Experience a delightful stay at bhavesh'villa, located in the heart of chandigarh. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  },
+  {
+    "houseName": "roieo",
+    "price": "555",
+    "location": "ddd",
+    "rating": "25",
+    "photoUrl": "https://media.gettyimages.com/id/175537632/photo/view-of-white-house-with-garage-from-the-front.jpg?s=612x612&w=0&k=20&c=QIC7hremPlbm9fbyksvF5vXPjrParaf-Vf64O2vUp34=",
+    "id": "22",
+    "description": "Experience a delightful stay at roieo, located in the heart of ddd. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays."
+  }
+]
