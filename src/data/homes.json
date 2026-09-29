@@ -218,5 +218,15 @@
     "id": "22",
     "description": "Experience a delightful stay at roieo, located in the heart of ddd. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays.",
     "hostId": "user_host_1"
+  },
+  {
+    "id": "1790723428106",
+    "hostId": "user_1790723282233",
+    "houseName": "Harsh's villa",
+    "price": "8000",
+    "location": "Roorkee",
+    "rating": "4.8",
+    "photoUrl": "https://a0.muscache.com/im/pictures/hosting/Hosting-1758200584630027184/original/448263aa-23f0-4e15-8487-464767bb2265.jpeg?im_w=1200",
+    "description": "My house is so beautiful  : )"
   }
 ]

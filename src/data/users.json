@@ -14,5 +14,13 @@
     "password": "$2b$10$UQJ6YOjE5AUgTp7u7FIQsu8Q69kxKY8GxVSJiQY1A2mQ0z3BNxxFO",
     "userType": "guest",
     "createdAt": "2026-09-30"
+  },
+  {
+    "id": "user_1790723282233",
+    "name": "Harsh Choudhary",
+    "email": "kuku@gmail.com",
+    "password": "$2b$12$TBo3oIw0vrADIEjYJ4D8Pe36utmK08Amjq0ng/aRIjBlJ.yosPjKq",
+    "userType": "host",
+    "createdAt": "2026-09-29"
   }
 ]
