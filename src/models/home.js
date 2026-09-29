@@ -42,7 +42,7 @@ module.exports = class Home {
     houseName,
     price,
     location,
-    rating,
+    rating = 'New',
     photoUrl,
     description = '',
     hostId = null,
@@ -53,7 +53,7 @@ module.exports = class Home {
     this.houseName = houseName;
     this.price = price;
     this.location = location;
-    this.rating = rating;
+    this.rating = rating || 'New';
     this.photoUrl = photoUrl;
     this.description =
       description ||

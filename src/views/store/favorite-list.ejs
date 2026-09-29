@@ -58,7 +58,7 @@
                     </h3>
                     <div class="flex items-center text-sm font-semibold text-gray-800 ml-2">
                       <i class="fas fa-star text-yellow-400 mr-1"></i>
-                      <span><%= home.rating %></span>
+                      <span><%= (home.rating && home.rating !== 'New') ? home.rating : 'New' %></span>
                     </div>
                   </div>
                   <p class="text-sm text-gray-500 mb-4 line-clamp-2"><%= home.description || 'Charming property with modern decor, comfortable bedding, and convenient access to local attractions.' %></p>

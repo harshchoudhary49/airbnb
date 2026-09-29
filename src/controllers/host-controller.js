@@ -19,13 +19,13 @@ exports.getHostHomes = (req, res, next) => {
 };
 
 exports.postAddHome = (req, res, next) => {
-  const { houseName, price, location, rating, photoUrl, description } = req.body;
+  const { houseName, price, location, photoUrl, description } = req.body;
   const hostId = req.session.user ? req.session.user.id : 'user_host_1';
   const home = new Home(
     houseName,
     price,
     location,
-    rating,
+    'New', // Newly listed property defaults to 'New' until guests leave reviews
     photoUrl,
     description,
     hostId
@@ -62,7 +62,7 @@ exports.getEditHome = (req, res, next) => {
 };
 
 exports.postEditHome = (req, res, next) => {
-  const { id, houseName, price, location, rating, photoUrl, description } = req.body;
+  const { id, houseName, price, location, photoUrl, description } = req.body;
   const currentHostId = req.session.user ? req.session.user.id : 'user_host_1';
 
   Home.findById(id, (existingHome) => {
@@ -81,7 +81,7 @@ exports.postEditHome = (req, res, next) => {
       houseName,
       price,
       location,
-      rating,
+      existingHome.rating || 'New', // Preserve authentic rating!
       photoUrl,
       description,
       currentHostId,
