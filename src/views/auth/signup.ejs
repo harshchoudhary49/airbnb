@@ -1,0 +1,98 @@
+<%- include('../partials/head') %>
+  </head>
+  <body class="bg-gray-50 min-h-screen flex flex-col justify-between">
+    <%- include('../partials/nav') %>
+
+    <main class="container mx-auto px-4 py-12 max-w-md">
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="bg-red-500 text-white p-6 text-center">
+          <i class="fa-brands fa-airbnb text-4xl mb-2"></i>
+          <h1 class="text-2xl font-bold">Create an Account</h1>
+          <p class="text-red-100 text-sm mt-1">Join millions of travelers and hosts on Airbnb</p>
+        </div>
+
+        <div class="p-6 md:p-8">
+          <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+            <div class="mb-5 p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl flex items-center gap-2">
+              <i class="fas fa-exclamation-circle text-red-500"></i>
+              <span><%= errorMessage %></span>
+            </div>
+          <% } %>
+
+          <form action="/signup" method="POST" class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+              <input
+                type="text"
+                name="name"
+                required
+                value="<%= typeof oldInput !== 'undefined' && oldInput.name ? oldInput.name : '' %>"
+                placeholder="Rahul Sharma"
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-800"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+              <input
+                type="email"
+                name="email"
+                required
+                value="<%= typeof oldInput !== 'undefined' && oldInput.email ? oldInput.email : '' %>"
+                placeholder="you@example.com"
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-800"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+              <input
+                type="password"
+                name="password"
+                required
+                minlength="6"
+                placeholder="At least 6 characters"
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-800"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">I want to join as:</label>
+              <div class="grid grid-cols-2 gap-3">
+                <label class="border-2 border-gray-200 rounded-xl p-3 flex flex-col items-center cursor-pointer hover:border-red-400 transition text-center has-[:checked]:border-red-500 has-[:checked]:bg-red-50">
+                  <input type="radio" name="userType" value="guest" checked class="hidden peer" />
+                  <i class="fas fa-suitcase-rolling text-2xl text-gray-500 peer-checked:text-red-500 mb-1"></i>
+                  <span class="font-bold text-sm text-gray-800">Guest</span>
+                  <span class="text-xs text-gray-400">Book & travel</span>
+                </label>
+                <label class="border-2 border-gray-200 rounded-xl p-3 flex flex-col items-center cursor-pointer hover:border-red-400 transition text-center has-[:checked]:border-red-500 has-[:checked]:bg-red-50">
+                  <input type="radio" name="userType" value="host" class="hidden peer" />
+                  <i class="fas fa-home text-2xl text-gray-500 peer-checked:text-red-500 mb-1"></i>
+                  <span class="font-bold text-sm text-gray-800">Host</span>
+                  <span class="text-xs text-gray-400">List places</span>
+                </label>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl shadow transition duration-200 text-base">
+              Agree & Continue
+            </button>
+          </form>
+
+          <div class="mt-6 text-center text-sm text-gray-600">
+            Already have an account? 
+            <a href="/login" class="text-red-500 hover:underline font-semibold">Log in</a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 py-6 text-center text-sm text-gray-500">
+      <div class="container mx-auto px-4">
+        <p>&copy; 2026 Airbnb, Inc. All rights reserved</p>
+      </div>
+    </footer>
+  </body>
+</html>

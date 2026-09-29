@@ -18,6 +18,10 @@ const getHomesFromFile = (callback) => {
           home.id = (index + 1).toString();
           updated = true;
         }
+        if (!home.hostId) {
+          home.hostId = 'user_host_1'; // Associate legacy seed homes with demo host
+          updated = true;
+        }
         if (!home.description) {
           home.description = `Experience a delightful stay at ${home.houseName}, located in the heart of ${home.location}. This property boasts top-tier comfort, modern amenities, high-speed Wi-Fi, and a serene ambiance perfect for both leisure and business stays.`;
           updated = true;
@@ -34,8 +38,18 @@ const getHomesFromFile = (callback) => {
 };
 
 module.exports = class Home {
-  constructor(houseName, price, location, rating, photoUrl, description = '', id = null) {
+  constructor(
+    houseName,
+    price,
+    location,
+    rating,
+    photoUrl,
+    description = '',
+    hostId = null,
+    id = null
+  ) {
     this.id = id;
+    this.hostId = hostId || 'user_host_1';
     this.houseName = houseName;
     this.price = price;
     this.location = location;
@@ -56,6 +70,7 @@ module.exports = class Home {
         if (existingIndex >= 0) {
           registeredHomes[existingIndex] = {
             id: this.id,
+            hostId: this.hostId || registeredHomes[existingIndex].hostId || 'user_host_1',
             houseName: this.houseName,
             price: this.price,
             location: this.location,
@@ -89,8 +104,24 @@ module.exports = class Home {
     });
   }
 
-  static deleteById(id, callback) {
+  static findByHostId(hostId, callback) {
     getHomesFromFile((homes) => {
+      const filtered = homes.filter(
+        (h) => (h.hostId || 'user_host_1') === hostId.toString()
+      );
+      callback(filtered);
+    });
+  }
+
+  static deleteById(id, hostId, callback) {
+    // If hostId provided, verify ownership
+    getHomesFromFile((homes) => {
+      const target = homes.find((h) => h.id.toString() === id.toString());
+      if (hostId && target && (target.hostId || 'user_host_1') !== hostId.toString()) {
+        // Unauthorized
+        return callback(new Error('Unauthorized: You can only delete your own listings'));
+      }
+
       const updatedHomes = homes.filter((h) => h.id.toString() !== id.toString());
       fs.writeFile(homeDataPath, JSON.stringify(updatedHomes, null, 2), (err) => {
         // Clean up linked favorites and bookings

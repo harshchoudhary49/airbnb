@@ -4,8 +4,10 @@ const Booking = require("../models/booking");
 
 exports.getIndex = (req, res, next) => {
   const searchQuery = (req.query.search || '').trim().toLowerCase();
+  const userId = req.session.user ? req.session.user.id : null;
+
   Home.fetchAll((registeredHomes) => {
-    Favorite.getFavoriteIds((favoriteIds) => {
+    Favorite.getFavoriteIds(userId, (favoriteIds) => {
       let homes = registeredHomes;
       if (searchQuery) {
         homes = homes.filter(
@@ -26,8 +28,10 @@ exports.getIndex = (req, res, next) => {
 
 exports.getHomes = (req, res, next) => {
   const searchQuery = (req.query.search || '').trim().toLowerCase();
+  const userId = req.session.user ? req.session.user.id : null;
+
   Home.fetchAll((registeredHomes) => {
-    Favorite.getFavoriteIds((favoriteIds) => {
+    Favorite.getFavoriteIds(userId, (favoriteIds) => {
       let homes = registeredHomes;
       if (searchQuery) {
         homes = homes.filter(
@@ -48,11 +52,13 @@ exports.getHomes = (req, res, next) => {
 
 exports.getHomeDetails = (req, res, next) => {
   const homeId = req.params.homeId;
+  const userId = req.session.user ? req.session.user.id : null;
+
   Home.findById(homeId, (home) => {
     if (!home) {
       return res.status(404).render('404', { pageTitle: 'Home Not Found' });
     }
-    Favorite.getFavoriteIds((favoriteIds) => {
+    Favorite.getFavoriteIds(userId, (favoriteIds) => {
       const isFavorite = favoriteIds.includes(home.id.toString());
       res.render('store/home-detail', {
         home: home,
@@ -90,6 +96,8 @@ exports.postReserveHome = (req, res, next) => {
     guestsCount
   } = req.body;
 
+  const userId = req.session.user ? req.session.user.id : 'user_guest_1';
+
   // Calculate total nights
   let nights = 1;
   if (checkIn && checkOut) {
@@ -104,12 +112,13 @@ exports.postReserveHome = (req, res, next) => {
     price,
     location,
     photoUrl,
-    guestName,
-    guestEmail,
+    guestName || (req.session.user ? req.session.user.name : ''),
+    guestEmail || (req.session.user ? req.session.user.email : ''),
     checkIn,
     checkOut,
     guestsCount || 1,
-    totalAmount
+    totalAmount,
+    userId
   );
 
   booking.save((err) => {
@@ -121,7 +130,8 @@ exports.postReserveHome = (req, res, next) => {
 };
 
 exports.getBookings = (req, res, next) => {
-  Booking.fetchAll((bookings) => {
+  const userId = req.session.user ? req.session.user.id : 'user_guest_1';
+  Booking.fetchByUserId(userId, (bookings) => {
     res.render('store/booking', {
       bookings: bookings,
       pageTitle: 'My Bookings'
@@ -131,7 +141,9 @@ exports.getBookings = (req, res, next) => {
 
 exports.postCancelBooking = (req, res, next) => {
   const bookingId = req.body.bookingId;
-  Booking.deleteById(bookingId, (err) => {
+  const userId = req.session.user ? req.session.user.id : 'user_guest_1';
+
+  Booking.deleteById(bookingId, userId, (err) => {
     if (err) {
       console.error('Error cancelling booking:', err);
     }
@@ -140,8 +152,10 @@ exports.postCancelBooking = (req, res, next) => {
 };
 
 exports.getfavoritelist = (req, res, next) => {
+  const userId = req.session.user ? req.session.user.id : 'user_guest_1';
+
   Home.fetchAll((registeredHomes) => {
-    Favorite.getFavoriteIds((favoriteIds) => {
+    Favorite.getFavoriteIds(userId, (favoriteIds) => {
       const favoriteHomes = registeredHomes.filter((home) =>
         favoriteIds.includes(home.id.toString())
       );
@@ -154,16 +168,29 @@ exports.getfavoritelist = (req, res, next) => {
 };
 
 exports.postAddToFavorites = (req, res, next) => {
+  if (!req.session || !req.session.isLoggedIn) {
+    req.session.returnTo = req.get('Referrer') || '/';
+    return res.redirect('/login');
+  }
+
   const homeId = req.body.homeId;
-  Favorite.addToFavorites(homeId, () => {
+  const userId = req.session.user.id;
+
+  Favorite.addToFavorites(userId, homeId, () => {
     const referrer = req.get('Referrer') || '/favorites';
     res.redirect(referrer);
   });
 };
 
 exports.postRemoveFromFavorites = (req, res, next) => {
+  if (!req.session || !req.session.isLoggedIn) {
+    return res.redirect('/login');
+  }
+
   const homeId = req.body.homeId;
-  Favorite.removeFromFavorites(homeId, () => {
+  const userId = req.session.user.id;
+
+  Favorite.removeFromFavorites(userId, homeId, () => {
     const referrer = req.get('Referrer') || '/favorites';
     res.redirect(referrer);
   });

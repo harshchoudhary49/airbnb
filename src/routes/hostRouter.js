@@ -4,6 +4,10 @@ const hostRouter = express.Router();
 
 // Local Module
 const hostcontroller = require('../controllers/host-controller');
+const isHost = require('../middleware/isHost');
+
+// Protect all /host routes with isHost middleware
+hostRouter.use(isHost);
 
 hostRouter.get('/add-home', hostcontroller.getAddHome);
 hostRouter.post('/add-home', hostcontroller.postAddHome);

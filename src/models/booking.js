@@ -32,9 +32,11 @@ module.exports = class Booking {
     checkOut,
     guestsCount,
     totalAmount,
+    userId = null,
     id = null
   ) {
     this.id = id || Date.now().toString();
+    this.userId = userId || 'user_guest_1';
     this.homeId = homeId;
     this.houseName = houseName;
     this.price = price;
@@ -67,8 +69,21 @@ module.exports = class Booking {
     getBookingsFromFile(callback);
   }
 
-  static deleteById(id, callback) {
+  static fetchByUserId(userId, callback) {
     getBookingsFromFile((bookings) => {
+      const userBookings = bookings.filter(
+        (b) => (b.userId || 'user_guest_1') === userId.toString()
+      );
+      callback(userBookings);
+    });
+  }
+
+  static deleteById(id, userId, callback) {
+    getBookingsFromFile((bookings) => {
+      const target = bookings.find((b) => b.id.toString() === id.toString());
+      if (userId && target && (target.userId || 'user_guest_1') !== userId.toString()) {
+        return callback(new Error('Unauthorized'));
+      }
       const updated = bookings.filter((b) => b.id.toString() !== id.toString());
       fs.writeFile(bookingDataPath, JSON.stringify(updated, null, 2), (err) => {
         if (callback) callback(err);

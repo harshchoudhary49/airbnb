@@ -1,34 +1,72 @@
-<header class="bg-red-500 text-white p-4 shadow-md sticky top-0 z-50">
+<header class="bg-red-500 text-white p-3.5 shadow-md sticky top-0 z-50">
   <nav class="container mx-auto flex flex-wrap justify-between items-center gap-3">
+    <!-- Brand Logo -->
     <a href="/" class="flex items-center space-x-2 text-2xl font-bold hover:opacity-90 transition">
       <i class="fa-brands fa-airbnb text-3xl"></i>
       <span>airbnb</span>
     </a>
-    <ul class="flex flex-wrap items-center space-x-1 md:space-x-3 text-sm md:text-base font-medium">
+
+    <!-- Center Navigation Links -->
+    <ul class="flex flex-wrap items-center space-x-1 md:space-x-2 text-sm font-medium">
       <li>
-        <a href="/" class="hover:bg-red-400 py-2 px-3 rounded transition duration-300">Explore</a>
-      </li>
-      <li>
-        <a href="/homes" class="hover:bg-red-400 py-2 px-3 rounded transition duration-300">Home List</a>
-      </li>
-      <li>
-        <a href="/bookings" class="hover:bg-red-400 py-2 px-3 rounded transition duration-300">
-          <i class="fas fa-calendar-check mr-1"></i>My Bookings
-        </a>
+        <a href="/" class="hover:bg-red-400 py-1.5 px-3 rounded-lg transition duration-200">Explore</a>
       </li>
       <li>
-        <a href="/favorites" class="hover:bg-red-400 py-2 px-3 rounded transition duration-300">
-          <i class="fas fa-heart mr-1"></i>My Favorites
-        </a>
+        <a href="/homes" class="hover:bg-red-400 py-1.5 px-3 rounded-lg transition duration-200">Home List</a>
       </li>
-      <li class="border-l border-red-400 pl-2">
-        <a href="/host/host-home-list" class="hover:bg-red-400 py-2 px-3 rounded transition duration-300">Host Homes</a>
-      </li>
-      <li>
-        <a href="/host/add-home" class="bg-white text-red-500 font-semibold hover:bg-gray-100 py-2 px-3 rounded shadow transition duration-300">
-          <i class="fas fa-plus mr-1"></i>Add Home
-        </a>
-      </li>
+
+      <% if (isLoggedIn) { %>
+        <li>
+          <a href="/bookings" class="hover:bg-red-400 py-1.5 px-3 rounded-lg transition duration-200">
+            <i class="fas fa-calendar-check mr-1"></i>My Bookings
+          </a>
+        </li>
+        <li>
+          <a href="/favorites" class="hover:bg-red-400 py-1.5 px-3 rounded-lg transition duration-200">
+            <i class="fas fa-heart mr-1"></i>My Favorites
+          </a>
+        </li>
+      <% } %>
+
+      <% if (isHost) { %>
+        <li class="border-l border-red-400 pl-2">
+          <a href="/host/host-home-list" class="hover:bg-red-400 py-1.5 px-3 rounded-lg transition duration-200">
+            <i class="fas fa-chart-pie mr-1"></i>Host Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="/host/add-home" class="bg-white text-red-500 font-bold hover:bg-gray-100 py-1.5 px-3 rounded-lg shadow-sm transition duration-200">
+            <i class="fas fa-plus mr-1"></i>Add Home
+          </a>
+        </li>
+      <% } %>
     </ul>
+
+    <!-- Auth Actions (Right Side) -->
+    <div class="flex items-center space-x-2 text-sm">
+      <% if (!isLoggedIn) { %>
+        <a href="/login" class="hover:bg-red-400 py-1.5 px-3 rounded-lg font-medium transition duration-200">
+          Log In
+        </a>
+        <a href="/signup" class="bg-white text-red-500 hover:bg-gray-100 font-bold py-1.5 px-3.5 rounded-lg shadow-sm transition duration-200">
+          Sign Up
+        </a>
+      <% } else { %>
+        <div class="flex items-center space-x-3 bg-red-600/60 py-1 px-3 rounded-xl backdrop-blur-sm border border-red-400/50">
+          <div class="text-left text-xs">
+            <span class="font-bold block text-white leading-tight"><%= user.name %></span>
+            <span class="text-red-200 uppercase tracking-widest text-[10px] font-semibold"><%= user.userType %></span>
+          </div>
+          <form action="/logout" method="POST" class="inline m-0">
+            <button 
+              type="submit" 
+              title="Log Out"
+              class="text-xs bg-white text-red-600 hover:bg-gray-100 font-bold py-1 px-2.5 rounded-md transition shadow-sm">
+              <i class="fas fa-sign-out-alt"></i>
+            </button>
+          </form>
+        </div>
+      <% } %>
+    </div>
   </nav>
 </header>

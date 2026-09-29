@@ -1,0 +1,18 @@
+[
+  {
+    "id": "user_host_1",
+    "name": "Harsh (Host)",
+    "email": "host@airbnb.com",
+    "password": "$2b$10$UQJ6YOjE5AUgTp7u7FIQsu8Q69kxKY8GxVSJiQY1A2mQ0z3BNxxFO",
+    "userType": "host",
+    "createdAt": "2026-09-30"
+  },
+  {
+    "id": "user_guest_1",
+    "name": "Harsh (Guest)",
+    "email": "guest@airbnb.com",
+    "password": "$2b$10$UQJ6YOjE5AUgTp7u7FIQsu8Q69kxKY8GxVSJiQY1A2mQ0z3BNxxFO",
+    "userType": "guest",
+    "createdAt": "2026-09-30"
+  }
+]

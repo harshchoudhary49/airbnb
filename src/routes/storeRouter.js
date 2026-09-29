@@ -4,20 +4,21 @@ const storeRouter = express.Router();
 
 // Local Module
 const storeController = require('../controllers/store-controller');
+const isAuth = require('../middleware/isAuth');
 
-// Browsing & Home Listings
+// Public Browsing Endpoints
 storeRouter.get('/', storeController.getIndex);
 storeRouter.get('/homes', storeController.getHomes);
 storeRouter.get('/homes/:homeId', storeController.getHomeDetails);
 
-// Reservations & Bookings
-storeRouter.get('/reserve/:homeId', storeController.getReserveHome);
-storeRouter.post('/reserve', storeController.postReserveHome);
-storeRouter.get('/bookings', storeController.getBookings);
-storeRouter.post('/cancel-booking', storeController.postCancelBooking);
+// Protected Reservations & Bookings (Requires login)
+storeRouter.get('/reserve/:homeId', isAuth, storeController.getReserveHome);
+storeRouter.post('/reserve', isAuth, storeController.postReserveHome);
+storeRouter.get('/bookings', isAuth, storeController.getBookings);
+storeRouter.post('/cancel-booking', isAuth, storeController.postCancelBooking);
 
-// Favorites / Wishlist
-storeRouter.get('/favorites', storeController.getfavoritelist);
+// Protected Favorites / Wishlist (Requires login)
+storeRouter.get('/favorites', isAuth, storeController.getfavoritelist);
 storeRouter.post('/favorites/add', storeController.postAddToFavorites);
 storeRouter.post('/favorites/remove', storeController.postRemoveFromFavorites);
 

@@ -9,7 +9,8 @@ exports.getAddHome = (req, res, next) => {
 };
 
 exports.getHostHomes = (req, res, next) => {
-  Home.fetchAll((registeredHomes) => {
+  const currentHostId = req.session.user ? req.session.user.id : 'user_host_1';
+  Home.findByHostId(currentHostId, (registeredHomes) => {
     res.render('host/host-home-list', {
       registeredHomes: registeredHomes,
       pageTitle: 'Host Homes List'
@@ -19,7 +20,16 @@ exports.getHostHomes = (req, res, next) => {
 
 exports.postAddHome = (req, res, next) => {
   const { houseName, price, location, rating, photoUrl, description } = req.body;
-  const home = new Home(houseName, price, location, rating, photoUrl, description);
+  const hostId = req.session.user ? req.session.user.id : 'user_host_1';
+  const home = new Home(
+    houseName,
+    price,
+    location,
+    rating,
+    photoUrl,
+    description,
+    hostId
+  );
   home.save((err) => {
     if (err) {
       console.error('Error saving home:', err);
@@ -30,9 +40,18 @@ exports.postAddHome = (req, res, next) => {
 
 exports.getEditHome = (req, res, next) => {
   const homeId = req.params.homeId;
+  const currentHostId = req.session.user ? req.session.user.id : 'user_host_1';
+
   Home.findById(homeId, (home) => {
     if (!home) {
       return res.redirect('/host/host-home-list');
+    }
+    // Verify property ownership
+    if ((home.hostId || 'user_host_1') !== currentHostId) {
+      return res.status(403).render('403', {
+        pageTitle: 'Forbidden',
+        message: 'You can only edit properties that you created.'
+      });
     }
     res.render('host/edit-home', {
       pageTitle: 'Edit Listing - ' + home.houseName,
@@ -44,18 +63,44 @@ exports.getEditHome = (req, res, next) => {
 
 exports.postEditHome = (req, res, next) => {
   const { id, houseName, price, location, rating, photoUrl, description } = req.body;
-  const updatedHome = new Home(houseName, price, location, rating, photoUrl, description, id);
-  updatedHome.save((err) => {
-    if (err) {
-      console.error('Error updating home:', err);
+  const currentHostId = req.session.user ? req.session.user.id : 'user_host_1';
+
+  Home.findById(id, (existingHome) => {
+    if (!existingHome) {
+      return res.redirect('/host/host-home-list');
     }
-    res.redirect('/host/host-home-list');
+    // Verify ownership
+    if ((existingHome.hostId || 'user_host_1') !== currentHostId) {
+      return res.status(403).render('403', {
+        pageTitle: 'Forbidden',
+        message: 'You can only update properties that you created.'
+      });
+    }
+
+    const updatedHome = new Home(
+      houseName,
+      price,
+      location,
+      rating,
+      photoUrl,
+      description,
+      currentHostId,
+      id
+    );
+    updatedHome.save((err) => {
+      if (err) {
+        console.error('Error updating home:', err);
+      }
+      res.redirect('/host/host-home-list');
+    });
   });
 };
 
 exports.postDeleteHome = (req, res, next) => {
   const homeId = req.body.homeId;
-  Home.deleteById(homeId, (err) => {
+  const currentHostId = req.session.user ? req.session.user.id : 'user_host_1';
+
+  Home.deleteById(homeId, currentHostId, (err) => {
     if (err) {
       console.error('Error deleting home:', err);
     }
