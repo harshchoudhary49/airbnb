@@ -228,5 +228,15 @@
     "rating": "4.8",
     "photoUrl": "https://a0.muscache.com/im/pictures/hosting/Hosting-1758200584630027184/original/448263aa-23f0-4e15-8487-464767bb2265.jpeg?im_w=1200",
     "description": "My house is so beautiful  : )"
+  },
+  {
+    "id": "1790858534265",
+    "hostId": "user_1790858487965",
+    "houseName": "Narveer's villa",
+    "price": "10000",
+    "location": "Gurgoan",
+    "rating": "New",
+    "photoUrl": "https://a0.muscache.com/im/pictures/hosting/Hosting-1758200584630027184/original/448263aa-23f0-4e15-8487-464767bb2265.jpeg?im_w=1200",
+    "description": "xyz"
   }
 ]

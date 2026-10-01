@@ -47,7 +47,7 @@
                     </div>
 
                     <div class="text-right">
-                      <div class="text-xl font-black text-red-500">₹<%= Number(booking.totalAmount).toLocaleString('en-IN') %></div>
+                      <div class="text-xl font-black text-red-500">₹<%= Number(booking.totalAmount || 0).toLocaleString('en-IN') %></div>
                       <div class="text-xs text-gray-400">Total Price</div>
                     </div>
                   </div>

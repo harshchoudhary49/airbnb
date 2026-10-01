@@ -8,6 +8,7 @@ exports.getLogin = (req, res, next) => {
   res.render('auth/login', {
     pageTitle: 'Log In - Airbnb',
     errorMessage: null,
+    infoMessage: req.query.info || null,
     oldInput: {}
   });
 };
@@ -15,17 +16,30 @@ exports.getLogin = (req, res, next) => {
 exports.postLogin = (req, res, next) => {
   const { email, password } = req.body;
 
-  User.findByEmail(email, async (user) => {
+  const cleanedEmail = (email || '').toLowerCase().trim();
+  const cleanedPassword = (password || '').trim();
+
+  if (!cleanedEmail || !cleanedPassword) {
+    return res.status(422).render('auth/login', {
+      pageTitle: 'Log In - Airbnb',
+      errorMessage: 'Please provide both email address and password.',
+      infoMessage: null,
+      oldInput: { email: cleanedEmail }
+    });
+  }
+
+  User.findByEmail(cleanedEmail, async (user) => {
     if (!user) {
       return res.status(422).render('auth/login', {
         pageTitle: 'Log In - Airbnb',
         errorMessage: 'Invalid email or password.',
-        oldInput: { email }
+        infoMessage: null,
+        oldInput: { email: cleanedEmail }
       });
     }
 
     try {
-      const doMatch = await bcrypt.compare(password, user.password);
+      const doMatch = await bcrypt.compare(cleanedPassword, user.password);
       if (doMatch) {
         req.session.isLoggedIn = true;
         req.session.user = {
@@ -47,11 +61,17 @@ exports.postLogin = (req, res, next) => {
       return res.status(422).render('auth/login', {
         pageTitle: 'Log In - Airbnb',
         errorMessage: 'Invalid email or password.',
-        oldInput: { email }
+        infoMessage: null,
+        oldInput: { email: cleanedEmail }
       });
     } catch (err) {
-      console.error(err);
-      res.redirect('/login');
+      console.error('Error during password comparison:', err);
+      res.status(500).render('auth/login', {
+        pageTitle: 'Log In - Airbnb',
+        errorMessage: 'An unexpected authentication error occurred. Please try again.',
+        infoMessage: null,
+        oldInput: { email: cleanedEmail }
+      });
     }
   });
 };
@@ -70,22 +90,47 @@ exports.getSignup = (req, res, next) => {
 exports.postSignup = (req, res, next) => {
   const { name, email, password, userType } = req.body;
 
-  User.findByEmail(email, async (existingUser) => {
+  const cleanedName = (name || '').trim();
+  const cleanedEmail = (email || '').toLowerCase().trim();
+  const cleanedPassword = (password || '').trim();
+  const validUserType = userType === 'host' ? 'host' : 'guest';
+
+  if (!cleanedName || !cleanedEmail || !cleanedPassword) {
+    return res.status(422).render('auth/signup', {
+      pageTitle: 'Sign Up - Airbnb',
+      errorMessage: 'Please fill in all required fields.',
+      oldInput: { name: cleanedName, email: cleanedEmail, userType: validUserType }
+    });
+  }
+
+  if (cleanedPassword.length < 6) {
+    return res.status(422).render('auth/signup', {
+      pageTitle: 'Sign Up - Airbnb',
+      errorMessage: 'Password must be at least 6 characters long.',
+      oldInput: { name: cleanedName, email: cleanedEmail, userType: validUserType }
+    });
+  }
+
+  User.findByEmail(cleanedEmail, async (existingUser) => {
     if (existingUser) {
       return res.status(422).render('auth/signup', {
         pageTitle: 'Sign Up - Airbnb',
         errorMessage: 'An account with this email address already exists.',
-        oldInput: { name, email }
+        oldInput: { name: cleanedName, email: cleanedEmail, userType: validUserType }
       });
     }
 
     try {
-      const hashedPassword = await bcrypt.hash(password, 12);
-      const user = new User(name, email, hashedPassword, userType || 'guest');
+      const hashedPassword = await bcrypt.hash(cleanedPassword, 12);
+      const user = new User(cleanedName, cleanedEmail, hashedPassword, validUserType);
       user.save((err, savedUser) => {
         if (err) {
           console.error('Error saving user:', err);
-          return res.redirect('/signup');
+          return res.status(500).render('auth/signup', {
+            pageTitle: 'Sign Up - Airbnb',
+            errorMessage: 'Could not create account due to server error. Please try again.',
+            oldInput: { name: cleanedName, email: cleanedEmail, userType: validUserType }
+          });
         }
 
         // Auto login after signup
@@ -98,12 +143,16 @@ exports.postSignup = (req, res, next) => {
         };
         req.session.save((saveErr) => {
           if (saveErr) console.error(saveErr);
-          res.redirect(user.userType === 'host' ? '/host/host-home-list' : '/');
+          res.redirect(validUserType === 'host' ? '/host/host-home-list' : '/');
         });
       });
     } catch (err) {
-      console.error(err);
-      res.redirect('/signup');
+      console.error('Signup error:', err);
+      res.status(500).render('auth/signup', {
+        pageTitle: 'Sign Up - Airbnb',
+        errorMessage: 'An unexpected error occurred during signup.',
+        oldInput: { name: cleanedName, email: cleanedEmail, userType: validUserType }
+      });
     }
   });
 };

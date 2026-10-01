@@ -1,86 +1,88 @@
-// Core Modules
-const fs = require('fs');
-const path = require('path');
-const rootDir = require('../utils/pathUtil');
-
-const favDataPath = path.join(rootDir, 'data', 'favorites.json');
-
-const getFavoritesFromFile = (callback) => {
-  fs.readFile(favDataPath, (err, data) => {
-    if (err || !data || data.length === 0) {
-      return callback({});
-    }
-    try {
-      const parsed = JSON.parse(data);
-      // Migrate legacy array to map if necessary
-      if (Array.isArray(parsed)) {
-        return callback({ user_guest_1: parsed });
-      }
-      callback(parsed || {});
-    } catch (e) {
-      callback({});
-    }
-  });
-};
+const prisma = require('../db/prisma');
 
 module.exports = class Favorite {
-  static addToFavorites(userId, homeId, callback) {
-    getFavoritesFromFile((favMap) => {
-      const uId = userId || 'user_guest_1';
-      if (!favMap[uId]) {
-        favMap[uId] = [];
-      }
-      const strId = homeId.toString();
-      if (!favMap[uId].includes(strId)) {
-        favMap[uId].push(strId);
-        fs.writeFile(favDataPath, JSON.stringify(favMap, null, 2), (err) => {
-          if (callback) callback(err, true);
-        });
-      } else {
-        if (callback) callback(null, false);
-      }
-    });
-  }
+  static async addToFavorites(userId, homeId, callback) {
+    try {
+      const uId = (userId || 'user_guest_1').toString();
+      const hId = homeId.toString();
 
-  static removeFromFavorites(userId, homeId, callback) {
-    getFavoritesFromFile((favMap) => {
-      const uId = userId || 'user_guest_1';
-      if (favMap[uId]) {
-        const strId = homeId.toString();
-        favMap[uId] = favMap[uId].filter((id) => id !== strId);
-        fs.writeFile(favDataPath, JSON.stringify(favMap, null, 2), (err) => {
-          if (callback) callback(err);
-        });
-      } else {
-        if (callback) callback(null);
-      }
-    });
-  }
-
-  static getFavoriteIds(userId, callback) {
-    getFavoritesFromFile((favMap) => {
-      const uId = userId || 'user_guest_1';
-      callback(favMap[uId] || []);
-    });
-  }
-
-  static deleteByHomeId(homeId, callback) {
-    getFavoritesFromFile((favMap) => {
-      const strId = homeId.toString();
-      let changed = false;
-      for (const uId in favMap) {
-        if (favMap[uId].includes(strId)) {
-          favMap[uId] = favMap[uId].filter((id) => id !== strId);
-          changed = true;
+      await prisma.favorite.upsert({
+        where: {
+          userId_homeId: {
+            userId: uId,
+            homeId: hId
+          }
+        },
+        update: {},
+        create: {
+          userId: uId,
+          homeId: hId
         }
+      });
+
+      if (callback) callback(null, true);
+      return true;
+    } catch (err) {
+      console.error('Error adding favorite in PostgreSQL:', err);
+      if (callback) callback(err, false);
+      return false;
+    }
+  }
+
+  static async removeFromFavorites(userId, homeId, callback) {
+    try {
+      const uId = (userId || 'user_guest_1').toString();
+      const hId = homeId.toString();
+
+      await prisma.favorite.deleteMany({
+        where: {
+          userId: uId,
+          homeId: hId
+        }
+      });
+
+      if (callback) callback(null);
+    } catch (err) {
+      console.error('Error removing favorite in PostgreSQL:', err);
+      if (callback) callback(err);
+    }
+  }
+
+  static async getFavoriteIds(userId, callback) {
+    try {
+      if (!userId) {
+        if (callback) callback([]);
+        return [];
       }
-      if (changed) {
-        fs.writeFile(favDataPath, JSON.stringify(favMap, null, 2), (err) => {
-          if (callback) callback(err);
-        });
-      } else {
+
+      const favorites = await prisma.favorite.findMany({
+        where: { userId: userId.toString() },
+        select: { homeId: true }
+      });
+
+      const ids = favorites.map((f) => f.homeId);
+      if (callback) callback(ids);
+      return ids;
+    } catch (err) {
+      console.error('Error getting favorite ids from PostgreSQL:', err);
+      if (callback) callback([]);
+      return [];
+    }
+  }
+
+  static async deleteByHomeId(homeId, callback) {
+    try {
+      if (!homeId) {
         if (callback) callback(null);
+        return;
       }
-    });
+      await prisma.favorite.deleteMany({
+        where: { homeId: homeId.toString() }
+      });
+      if (callback) callback(null);
+    } catch (err) {
+      console.error('Error deleting favorites by homeId:', err);
+      if (callback) callback(err);
+    }
   }
 };

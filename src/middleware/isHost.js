@@ -1,6 +1,10 @@
 module.exports = (req, res, next) => {
   if (!req.session || !req.session.isLoggedIn) {
-    req.session.returnTo = req.originalUrl;
+    if (req.method === 'GET') {
+      req.session.returnTo = req.originalUrl;
+    } else {
+      req.session.returnTo = req.get('Referrer') || '/';
+    }
     return res.redirect('/login');
   }
 

@@ -19,7 +19,7 @@ storeRouter.post('/cancel-booking', isAuth, storeController.postCancelBooking);
 
 // Protected Favorites / Wishlist (Requires login)
 storeRouter.get('/favorites', isAuth, storeController.getfavoritelist);
-storeRouter.post('/favorites/add', storeController.postAddToFavorites);
-storeRouter.post('/favorites/remove', storeController.postRemoveFromFavorites);
+storeRouter.post('/favorites/add', isAuth, storeController.postAddToFavorites);
+storeRouter.post('/favorites/remove', isAuth, storeController.postRemoveFromFavorites);
 
 module.exports = storeRouter;

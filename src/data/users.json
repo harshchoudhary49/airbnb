@@ -3,7 +3,7 @@
     "id": "user_host_1",
     "name": "Harsh (Host)",
     "email": "host@airbnb.com",
-    "password": "$2b$10$UQJ6YOjE5AUgTp7u7FIQsu8Q69kxKY8GxVSJiQY1A2mQ0z3BNxxFO",
+    "password": "$2b$10$Yht1LlRPINcuZ78qOEiog.qJ2Wn9FJTW.LwIRQPglVlB/EAN.OBIu",
     "userType": "host",
     "createdAt": "2026-09-30"
   },
@@ -11,7 +11,7 @@
     "id": "user_guest_1",
     "name": "Harsh (Guest)",
     "email": "guest@airbnb.com",
-    "password": "$2b$10$UQJ6YOjE5AUgTp7u7FIQsu8Q69kxKY8GxVSJiQY1A2mQ0z3BNxxFO",
+    "password": "$2b$10$Yht1LlRPINcuZ78qOEiog.qJ2Wn9FJTW.LwIRQPglVlB/EAN.OBIu",
     "userType": "guest",
     "createdAt": "2026-09-30"
   },
@@ -22,5 +22,13 @@
     "password": "$2b$12$TBo3oIw0vrADIEjYJ4D8Pe36utmK08Amjq0ng/aRIjBlJ.yosPjKq",
     "userType": "host",
     "createdAt": "2026-09-29"
+  },
+  {
+    "id": "user_1790858487965",
+    "name": "Narveer",
+    "email": "n@gmail.com",
+    "password": "$2b$12$ZXShjU1ChSkVM3KTHygheudfTwKWkCaFrcp4oxJF6UWkaR1O/pkOS",
+    "userType": "host",
+    "createdAt": "2026-10-01"
   }
 ]

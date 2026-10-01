@@ -9,20 +9,20 @@
     <!-- Center Navigation Links -->
     <ul class="flex flex-wrap items-center space-x-1 md:space-x-2 text-sm font-medium">
       <li>
-        <a href="/" class="hover:bg-red-400 py-1.5 px-3 rounded-lg transition duration-200">Explore</a>
+        <a href="/" class="<%= typeof currentPath !== 'undefined' && currentPath === '/' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg transition duration-200">Explore</a>
       </li>
       <li>
-        <a href="/homes" class="hover:bg-red-400 py-1.5 px-3 rounded-lg transition duration-200">Home List</a>
+        <a href="/homes" class="<%= typeof currentPath !== 'undefined' && currentPath === '/homes' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg transition duration-200">Home List</a>
       </li>
 
       <% if (isLoggedIn) { %>
         <li>
-          <a href="/bookings" class="hover:bg-red-400 py-1.5 px-3 rounded-lg transition duration-200">
+          <a href="/bookings" class="<%= typeof currentPath !== 'undefined' && currentPath === '/bookings' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg transition duration-200">
             <i class="fas fa-calendar-check mr-1"></i>My Bookings
           </a>
         </li>
         <li>
-          <a href="/favorites" class="hover:bg-red-400 py-1.5 px-3 rounded-lg transition duration-200">
+          <a href="/favorites" class="<%= typeof currentPath !== 'undefined' && currentPath === '/favorites' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg transition duration-200">
             <i class="fas fa-heart mr-1"></i>My Favorites
           </a>
         </li>
@@ -30,12 +30,12 @@
 
       <% if (isHost) { %>
         <li class="border-l border-red-400 pl-2">
-          <a href="/host/host-home-list" class="hover:bg-red-400 py-1.5 px-3 rounded-lg transition duration-200">
+          <a href="/host/host-home-list" class="<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/host/host-home-list') ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg transition duration-200">
             <i class="fas fa-chart-pie mr-1"></i>Host Dashboard
           </a>
         </li>
         <li>
-          <a href="/host/add-home" class="bg-white text-red-500 font-bold hover:bg-gray-100 py-1.5 px-3 rounded-lg shadow-sm transition duration-200">
+          <a href="/host/add-home" class="<%= typeof currentPath !== 'undefined' && currentPath === '/host/add-home' ? 'bg-gray-100 text-red-600 font-bold' : 'bg-white text-red-500 font-bold hover:bg-gray-100' %> py-1.5 px-3 rounded-lg shadow-sm transition duration-200">
             <i class="fas fa-plus mr-1"></i>Add Home
           </a>
         </li>
@@ -45,23 +45,23 @@
     <!-- Auth Actions (Right Side) -->
     <div class="flex items-center space-x-2 text-sm">
       <% if (!isLoggedIn) { %>
-        <a href="/login" class="hover:bg-red-400 py-1.5 px-3 rounded-lg font-medium transition duration-200">
+        <a href="/login" class="<%= typeof currentPath !== 'undefined' && currentPath === '/login' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg font-medium transition duration-200">
           Log In
         </a>
-        <a href="/signup" class="bg-white text-red-500 hover:bg-gray-100 font-bold py-1.5 px-3.5 rounded-lg shadow-sm transition duration-200">
+        <a href="/signup" class="<%= typeof currentPath !== 'undefined' && currentPath === '/signup' ? 'bg-gray-100' : 'bg-white hover:bg-gray-100' %> text-red-500 font-bold py-1.5 px-3.5 rounded-lg shadow-sm transition duration-200">
           Sign Up
         </a>
       <% } else { %>
         <div class="flex items-center space-x-3 bg-red-600/60 py-1 px-3 rounded-xl backdrop-blur-sm border border-red-400/50">
           <div class="text-left text-xs">
-            <span class="font-bold block text-white leading-tight"><%= user.name %></span>
-            <span class="text-red-200 uppercase tracking-widest text-[10px] font-semibold"><%= user.userType %></span>
+            <span class="font-bold block text-white leading-tight"><%= user && user.name ? user.name : 'User' %></span>
+            <span class="text-red-200 uppercase tracking-widest text-[10px] font-semibold"><%= user && user.userType ? user.userType : 'Member' %></span>
           </div>
           <form action="/logout" method="POST" class="inline m-0">
             <button 
               type="submit" 
               title="Log Out"
-              class="text-xs bg-white text-red-600 hover:bg-gray-100 font-bold py-1 px-2.5 rounded-md transition shadow-sm">
+              class="text-xs bg-white text-red-600 hover:bg-gray-100 font-bold py-1 px-2.5 rounded-md transition shadow-sm cursor-pointer">
               <i class="fas fa-sign-out-alt"></i>
             </button>
           </form>

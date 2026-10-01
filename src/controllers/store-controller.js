@@ -12,8 +12,9 @@ exports.getIndex = (req, res, next) => {
       if (searchQuery) {
         homes = homes.filter(
           (h) =>
-            h.houseName.toLowerCase().includes(searchQuery) ||
-            h.location.toLowerCase().includes(searchQuery)
+            (h.houseName || '').toLowerCase().includes(searchQuery) ||
+            (h.location || '').toLowerCase().includes(searchQuery) ||
+            (h.description || '').toLowerCase().includes(searchQuery)
         );
       }
       res.render('store/index-list', {
@@ -32,12 +33,13 @@ exports.getHomes = (req, res, next) => {
 
   Home.fetchAll((registeredHomes) => {
     Favorite.getFavoriteIds(userId, (favoriteIds) => {
-      let homes = registeredHomes;
+      let homes = registeredHomes || [];
       if (searchQuery) {
         homes = homes.filter(
           (h) =>
-            h.houseName.toLowerCase().includes(searchQuery) ||
-            h.location.toLowerCase().includes(searchQuery)
+            (h.houseName || '').toLowerCase().includes(searchQuery) ||
+            (h.location || '').toLowerCase().includes(searchQuery) ||
+            (h.description || '').toLowerCase().includes(searchQuery)
         );
       }
       res.render('store/home-list', {
@@ -85,55 +87,73 @@ exports.getReserveHome = (req, res, next) => {
 exports.postReserveHome = (req, res, next) => {
   const {
     homeId,
-    houseName,
-    price,
-    location,
-    photoUrl,
-    guestName,
-    guestEmail,
     checkIn,
     checkOut,
-    guestsCount
+    guestsCount,
+    guestName,
+    guestEmail
   } = req.body;
 
-  const userId = req.session.user ? req.session.user.id : 'user_guest_1';
-
-  // Calculate total nights
-  let nights = 1;
-  if (checkIn && checkOut) {
-    const diffTime = Math.abs(new Date(checkOut) - new Date(checkIn));
-    nights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  if (!req.session.user) {
+    return res.redirect('/login');
   }
-  const totalAmount = nights * (parseFloat(price) || 0);
 
-  const booking = new Booking(
-    homeId,
-    houseName,
-    price,
-    location,
-    photoUrl,
-    guestName || (req.session.user ? req.session.user.name : ''),
-    guestEmail || (req.session.user ? req.session.user.email : ''),
-    checkIn,
-    checkOut,
-    guestsCount || 1,
-    totalAmount,
-    userId
-  );
+  const userId = req.session.user.id;
 
-  booking.save((err) => {
-    if (err) {
-      console.error('Error saving booking:', err);
+  // Retrieve authentic home details from DB to prevent client-side price tampering
+  Home.findById(homeId, (home) => {
+    if (!home) {
+      return res.redirect('/homes');
     }
-    res.redirect('/bookings');
+
+    // Validate dates: checkIn must be valid, checkOut must be after checkIn
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    if (
+      isNaN(checkInDate.getTime()) ||
+      isNaN(checkOutDate.getTime()) ||
+      checkOutDate <= checkInDate
+    ) {
+      return res.redirect(`/reserve/${homeId}`);
+    }
+
+    const diffTime = checkOutDate.getTime() - checkInDate.getTime();
+    const nights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    const authenticPrice = parseFloat(home.price) || 0;
+    const totalAmount = nights * authenticPrice;
+
+    const booking = new Booking(
+      home.id,
+      home.houseName,
+      authenticPrice,
+      home.location,
+      home.photoUrl,
+      (guestName || req.session.user.name || '').trim(),
+      (guestEmail || req.session.user.email || '').trim(),
+      checkIn,
+      checkOut,
+      parseInt(guestsCount, 10) || 1,
+      totalAmount,
+      userId
+    );
+
+    booking.save((err) => {
+      if (err) {
+        console.error('Error saving booking:', err);
+      }
+      res.redirect('/bookings');
+    });
   });
 };
 
 exports.getBookings = (req, res, next) => {
-  const userId = req.session.user ? req.session.user.id : 'user_guest_1';
+  const userId = req.session.user ? req.session.user.id : null;
+  if (!userId) {
+    return res.redirect('/login');
+  }
   Booking.fetchByUserId(userId, (bookings) => {
     res.render('store/booking', {
-      bookings: bookings,
+      bookings: bookings || [],
       pageTitle: 'My Bookings'
     });
   });
@@ -141,23 +161,36 @@ exports.getBookings = (req, res, next) => {
 
 exports.postCancelBooking = (req, res, next) => {
   const bookingId = req.body.bookingId;
-  const userId = req.session.user ? req.session.user.id : 'user_guest_1';
+  const userId = req.session.user ? req.session.user.id : null;
+
+  if (!userId) {
+    return res.redirect('/login');
+  }
 
   Booking.deleteById(bookingId, userId, (err) => {
     if (err) {
       console.error('Error cancelling booking:', err);
+      if (err.message === 'Unauthorized') {
+        return res.status(403).render('403', {
+          pageTitle: 'Forbidden',
+          message: 'You are not authorized to cancel this booking.'
+        });
+      }
     }
     res.redirect('/bookings');
   });
 };
 
 exports.getfavoritelist = (req, res, next) => {
-  const userId = req.session.user ? req.session.user.id : 'user_guest_1';
+  const userId = req.session.user ? req.session.user.id : null;
+  if (!userId) {
+    return res.redirect('/login');
+  }
 
   Home.fetchAll((registeredHomes) => {
     Favorite.getFavoriteIds(userId, (favoriteIds) => {
-      const favoriteHomes = registeredHomes.filter((home) =>
-        favoriteIds.includes(home.id.toString())
+      const favoriteHomes = (registeredHomes || []).filter((home) =>
+        (favoriteIds || []).includes(home.id.toString())
       );
       res.render('store/favorite-list', {
         registeredHomes: favoriteHomes,

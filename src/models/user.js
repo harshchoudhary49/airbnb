@@ -1,64 +1,91 @@
-// Core Modules
-const fs = require('fs');
-const path = require('path');
-const rootDir = require('../utils/pathUtil');
-
-const userDataPath = path.join(rootDir, 'data', 'users.json');
-
-const getUsersFromFile = (callback) => {
-  fs.readFile(userDataPath, (err, data) => {
-    if (err || !data || data.length === 0) {
-      return callback([]);
-    }
-    try {
-      const users = JSON.parse(data);
-      callback(users);
-    } catch (e) {
-      callback([]);
-    }
-  });
-};
+const prisma = require('../db/prisma');
 
 module.exports = class User {
   constructor(name, email, password, userType = 'guest', id = null) {
-    this.id = id || 'user_' + Date.now().toString();
+    this.id = id;
     this.name = name;
-    this.email = email.toLowerCase().trim();
+    this.email = (email || '').toLowerCase().trim();
     this.password = password;
     this.userType = userType; // 'guest' or 'host'
-    this.createdAt = new Date().toISOString().split('T')[0];
+    this.createdAt = new Date();
   }
 
-  save(callback) {
-    getUsersFromFile((users) => {
-      const existingIndex = users.findIndex((u) => u.id === this.id);
-      if (existingIndex >= 0) {
-        users[existingIndex] = this;
+  async save(callback) {
+    try {
+      let savedUser;
+      if (this.id) {
+        savedUser = await prisma.user.update({
+          where: { id: this.id },
+          data: {
+            name: this.name,
+            email: this.email,
+            password: this.password,
+            userType: this.userType
+          }
+        });
       } else {
-        users.push(this);
+        savedUser = await prisma.user.create({
+          data: {
+            name: this.name,
+            email: this.email,
+            password: this.password,
+            userType: this.userType
+          }
+        });
       }
-      fs.writeFile(userDataPath, JSON.stringify(users, null, 2), (err) => {
-        if (callback) callback(err, this);
-      });
-    });
+      this.id = savedUser.id;
+      if (callback) callback(null, savedUser);
+      return savedUser;
+    } catch (err) {
+      if (callback) callback(err, null);
+      else throw err;
+    }
   }
 
-  static findByEmail(email, callback) {
-    getUsersFromFile((users) => {
+  static async findByEmail(email, callback) {
+    try {
       const normalized = (email || '').toLowerCase().trim();
-      const user = users.find((u) => u.email === normalized);
-      callback(user || null);
-    });
+      const user = await prisma.user.findUnique({
+        where: { email: normalized }
+      });
+      if (callback) callback(user);
+      return user;
+    } catch (err) {
+      console.error('Error in User.findByEmail:', err);
+      if (callback) callback(null);
+      return null;
+    }
   }
 
-  static findById(id, callback) {
-    getUsersFromFile((users) => {
-      const user = users.find((u) => u.id.toString() === (id || '').toString());
-      callback(user || null);
-    });
+  static async findById(id, callback) {
+    try {
+      if (!id) {
+        if (callback) callback(null);
+        return null;
+      }
+      const user = await prisma.user.findUnique({
+        where: { id: id.toString() }
+      });
+      if (callback) callback(user);
+      return user;
+    } catch (err) {
+      console.error('Error in User.findById:', err);
+      if (callback) callback(null);
+      return null;
+    }
   }
 
-  static fetchAll(callback) {
-    getUsersFromFile(callback);
+  static async fetchAll(callback) {
+    try {
+      const users = await prisma.user.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
+      if (callback) callback(users);
+      return users;
+    } catch (err) {
+      console.error('Error in User.fetchAll:', err);
+      if (callback) callback([]);
+      return [];
+    }
   }
 };

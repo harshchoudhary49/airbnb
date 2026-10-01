@@ -1,0 +1,75 @@
+// Prisma schema file
+// Documentation: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  password  String
+  userType  String     @default("guest") // "guest" or "host"
+  createdAt DateTime   @default(now())
+
+  homes     Home[]     @relation("HostHomes")
+  bookings  Booking[]  @relation("UserBookings")
+  favorites Favorite[] @relation("UserFavorites")
+
+  @@map("users")
+}
+
+model Home {
+  id          String     @id @default(uuid())
+  houseName   String
+  price       Float
+  location    String
+  rating      String     @default("New")
+  photoUrl    String
+  description String     @db.Text
+  hostId      String
+  host        User       @relation("HostHomes", fields: [hostId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+
+  bookings    Booking[]  @relation("HomeBookings")
+  favorites   Favorite[] @relation("HomeFavorites")
+
+  @@map("homes")
+}
+
+model Booking {
+  id          String   @id @default(uuid())
+  homeId      String
+  home        Home     @relation("HomeBookings", fields: [homeId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation("UserBookings", fields: [userId], references: [id], onDelete: Cascade)
+  guestName   String
+  guestEmail  String
+  checkIn     String
+  checkOut    String
+  guestsCount Int      @default(1)
+  totalAmount Float
+  bookedAt    String
+  status      String   @default("Confirmed")
+  createdAt   DateTime @default(now())
+
+  @@map("bookings")
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation("UserFavorites", fields: [userId], references: [id], onDelete: Cascade)
+  homeId    String
+  home      Home     @relation("HomeFavorites", fields: [homeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, homeId])
+  @@map("favorites")
+}
