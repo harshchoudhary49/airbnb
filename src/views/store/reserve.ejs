@@ -152,7 +152,8 @@
       const checkOutInput = document.getElementById('checkOutInput');
       const nightsCountDisplay = document.getElementById('nightsCountDisplay');
       const totalPriceDisplay = document.getElementById('totalPriceDisplay');
-      const basePrice = <%= Number(home.price) || 0 %>;
+      const homePriceInput = document.getElementById('homePrice');
+      const basePrice = Number(homePriceInput ? homePriceInput.value : 0) || 0;
 
       const formatDate = (date) => date.toISOString().split('T')[0];
       

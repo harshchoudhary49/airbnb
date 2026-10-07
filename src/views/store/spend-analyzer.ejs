@@ -590,6 +590,21 @@
       </div>
     </footer>
 
+    <!-- Safe JSON Data Block for Client Analytics -->
+    <script type="application/json" id="spendData">
+      <%- JSON.stringify({
+        hasBookings: Boolean(bookings && bookings.length > 0),
+        totalSpend: (metrics && metrics.totalSpend) || 0,
+        monthlyTrend: monthlyTrend || [],
+        cityBreakdown: cityBreakdown || [],
+        isHost: Boolean(typeof isHost !== 'undefined' && isHost),
+        hasHostMetrics: Boolean(typeof hostMetrics !== 'undefined' && hostMetrics),
+        hostMonthlyTrend: (typeof hostMonthlyTrend !== 'undefined' && hostMonthlyTrend) || [],
+        propertyBreakdown: (typeof propertyBreakdown !== 'undefined' && propertyBreakdown) || [],
+        totalHostRevenue: (typeof hostMetrics !== 'undefined' && hostMetrics && hostMetrics.totalRevenue) || 0
+      }) %>
+    </script>
+
     <!-- ========================================== -->
     <!-- CLIENT JAVASCRIPT & CHARTS INITIALIZATION -->
     <!-- ========================================== -->
@@ -607,10 +622,10 @@
           spendSection.classList.add('hidden');
           revenueSection.classList.remove('hidden');
 
-          tabSpendBtn.className = 'flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 text-gray-600 hover:text-gray-900 cursor-pointer';
-          tabRevenueBtn.className = 'flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 shadow-sm bg-white text-emerald-700 cursor-pointer';
+          if (tabSpendBtn) tabSpendBtn.className = 'flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 text-gray-600 hover:text-gray-900 cursor-pointer';
+          if (tabRevenueBtn) tabRevenueBtn.className = 'flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 shadow-sm bg-white text-emerald-700 cursor-pointer';
           
-          if (!window.hostChartsRendered) {
+          if (!window.hostChartsRendered && typeof renderHostCharts === 'function') {
             renderHostCharts();
             window.hostChartsRendered = true;
           }
@@ -618,10 +633,14 @@
           revenueSection.classList.add('hidden');
           spendSection.classList.remove('hidden');
 
-          tabSpendBtn.className = 'flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 shadow-sm bg-white text-red-600 cursor-pointer';
-          tabRevenueBtn.className = 'flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 text-gray-600 hover:text-gray-900 cursor-pointer';
+          if (tabSpendBtn) tabSpendBtn.className = 'flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 shadow-sm bg-white text-red-600 cursor-pointer';
+          if (tabRevenueBtn) tabRevenueBtn.className = 'flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 text-gray-600 hover:text-gray-900 cursor-pointer';
         }
       }
+
+      // Read JSON payload
+      const analyticsEl = document.getElementById('spendData');
+      const analytics = analyticsEl ? JSON.parse(analyticsEl.textContent || '{}') : {};
 
       // Auto-switch to revenue tab if URL has ?tab=revenue or #revenue
       document.addEventListener('DOMContentLoaded', function() {
@@ -631,11 +650,11 @@
         }
       });
 
-      <% if (bookings && bookings.length > 0) { %>
-        // 1. Spend Analyzer Budget Tracker
-        const totalSpend = <%= metrics.totalSpend || 0 %>;
-        const monthlyData = <%- JSON.stringify(monthlyTrend || []) %>;
-        const cityData = <%- JSON.stringify(cityBreakdown || []) %>;
+      // 1. Spend Analyzer Budget Tracker & Charts
+      if (analytics.hasBookings) {
+        const totalSpend = analytics.totalSpend || 0;
+        const monthlyData = analytics.monthlyTrend || [];
+        const cityData = analytics.cityBreakdown || [];
 
         const budgetInput = document.getElementById('targetBudgetInput');
         const progressBar = document.getElementById('budgetProgressBar');
@@ -652,29 +671,33 @@
           const remaining = budget - totalSpend;
 
           progressBar.style.width = cappedWidth + '%';
-          percentDisplay.textContent = Math.round(ratio) + '%';
-          targetMaxLabel.textContent = '₹' + Number(budget).toLocaleString('en-IN');
+          if (percentDisplay) percentDisplay.textContent = Math.round(ratio) + '%';
+          if (targetMaxLabel) targetMaxLabel.textContent = '₹' + Number(budget).toLocaleString('en-IN');
 
-          if (remaining >= 0) {
-            remainingDisplay.textContent = '₹' + Number(remaining).toLocaleString('en-IN');
-            remainingDisplay.className = 'font-extrabold text-emerald-600 ml-1';
-          } else {
-            remainingDisplay.textContent = '-₹' + Number(Math.abs(remaining)).toLocaleString('en-IN') + ' (Over)';
-            remainingDisplay.className = 'font-extrabold text-red-600 ml-1';
+          if (remainingDisplay) {
+            if (remaining >= 0) {
+              remainingDisplay.textContent = '₹' + Number(remaining).toLocaleString('en-IN');
+              remainingDisplay.className = 'font-extrabold text-emerald-600 ml-1';
+            } else {
+              remainingDisplay.textContent = '-₹' + Number(Math.abs(remaining)).toLocaleString('en-IN') + ' (Over)';
+              remainingDisplay.className = 'font-extrabold text-red-600 ml-1';
+            }
           }
 
-          if (ratio <= 75) {
-            progressBar.className = 'h-full rounded-full transition-all duration-500 bg-emerald-500';
-            statusBadge.className = 'text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
-            statusBadge.innerHTML = '<i class="fas fa-shield-halved mr-1"></i> Under Budget (Safe)';
-          } else if (ratio <= 95) {
-            progressBar.className = 'h-full rounded-full transition-all duration-500 bg-amber-500';
-            statusBadge.className = 'text-xs font-bold px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200';
-            statusBadge.innerHTML = '<i class="fas fa-triangle-exclamation mr-1"></i> Nearing Limit (' + Math.round(ratio) + '%)';
-          } else {
-            progressBar.className = 'h-full rounded-full transition-all duration-500 bg-red-600';
-            statusBadge.className = 'text-xs font-bold px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-200';
-            statusBadge.innerHTML = '<i class="fas fa-circle-exclamation mr-1"></i> Budget Exceeded';
+          if (statusBadge) {
+            if (ratio <= 75) {
+              progressBar.className = 'h-full rounded-full transition-all duration-500 bg-emerald-500';
+              statusBadge.className = 'text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+              statusBadge.innerHTML = '<i class="fas fa-shield-halved mr-1"></i> Under Budget (Safe)';
+            } else if (ratio <= 95) {
+              progressBar.className = 'h-full rounded-full transition-all duration-500 bg-amber-500';
+              statusBadge.className = 'text-xs font-bold px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200';
+              statusBadge.innerHTML = '<i class="fas fa-triangle-exclamation mr-1"></i> Nearing Limit (' + Math.round(ratio) + '%)';
+            } else {
+              progressBar.className = 'h-full rounded-full transition-all duration-500 bg-red-600';
+              statusBadge.className = 'text-xs font-bold px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-200';
+              statusBadge.innerHTML = '<i class="fas fa-circle-exclamation mr-1"></i> Budget Exceeded';
+            }
           }
         }
 
@@ -784,15 +807,16 @@
             });
           });
         }
-      <% } %>
+      }
 
-      // Host Revenue Charts Function
-      <% if (typeof isHost !== 'undefined' && isHost && typeof hostMetrics !== 'undefined' && hostMetrics) { %>
-        const hostMonthlyData = <%- JSON.stringify(hostMonthlyTrend || []) %>;
-        const hostPropertyData = <%- JSON.stringify(propertyBreakdown || []) %>;
-        const totalHostRevenue = <%= hostMetrics.totalRevenue || 0 %>;
+      // 2. Host Revenue Charts Function
+      let renderHostCharts = null;
+      if (analytics.isHost && analytics.hasHostMetrics) {
+        const hostMonthlyData = analytics.hostMonthlyTrend || [];
+        const hostPropertyData = analytics.propertyBreakdown || [];
+        const totalHostRevenue = analytics.totalHostRevenue || 0;
 
-        function renderHostCharts() {
+        renderHostCharts = function() {
           // 1. Host Monthly Revenue Chart
           const hostMonthCtx = document.getElementById('hostMonthlyRevenueChart');
           if (hostMonthCtx) {
@@ -894,8 +918,8 @@
               });
             });
           }
-        }
-      <% } %>
+        };
+      }
     </script>
   </body>
 </html>
