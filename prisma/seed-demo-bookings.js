@@ -116,7 +116,42 @@ async function addDemoBookings() {
     }
   }
 
-  console.log(`Successfully seeded ${totalInserted} demo bookings across all accounts!`);
+  // 2. Also ensure each host's properties have received guest bookings
+  console.log('--- Seeding Incoming Guest Bookings for Host Revenue ---');
+  const allHomes = await prisma.home.findMany();
+  const sampleGuestBookings = [
+    { guestName: 'Aditi Sharma', guestEmail: 'aditi@example.com', checkIn: '2026-04-10', checkOut: '2026-04-14', guestsCount: 2, totalAmount: 24000, bookedAt: 'Mar 28, 2026', status: 'Completed' },
+    { guestName: 'Rohan Mehta', guestEmail: 'rohan@example.com', checkIn: '2026-06-18', checkOut: '2026-06-21', guestsCount: 4, totalAmount: 18000, bookedAt: 'Jun 1, 2026', status: 'Completed' },
+    { guestName: 'Pooja Verma', guestEmail: 'pooja@example.com', checkIn: '2026-08-12', checkOut: '2026-08-15', guestsCount: 3, totalAmount: 21000, bookedAt: 'Jul 30, 2026', status: 'Completed' },
+    { guestName: 'Karan Malhotra', guestEmail: 'karan@example.com', checkIn: '2026-11-20', checkOut: '2026-11-24', guestsCount: 2, totalAmount: 32000, bookedAt: 'Oct 15, 2026', status: 'Confirmed' }
+  ];
+
+  for (const home of allHomes) {
+    for (let j = 0; j < sampleGuestBookings.length; j++) {
+      const gb = sampleGuestBookings[j];
+      const hostBookId = `host_rev_${home.id.replace(/[^a-zA-Z0-9_-]/g, '_')}_${j + 1}`;
+      
+      await prisma.booking.upsert({
+        where: { id: hostBookId },
+        update: {},
+        create: {
+          id: hostBookId,
+          homeId: home.id,
+          userId: 'user_guest_1',
+          guestName: gb.guestName,
+          guestEmail: gb.guestEmail,
+          checkIn: gb.checkIn,
+          checkOut: gb.checkOut,
+          guestsCount: gb.guestsCount,
+          totalAmount: gb.totalAmount,
+          bookedAt: gb.bookedAt,
+          status: gb.status
+        }
+      });
+    }
+  }
+
+  console.log(`Successfully seeded ${totalInserted} demo trips and host revenue bookings!`);
 }
 
 addDemoBookings()

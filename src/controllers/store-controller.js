@@ -334,8 +334,116 @@ exports.getSpendAnalyzer = async (req, res, next) => {
     // Default target budget
     const targetBudget = 60000;
 
+    // Compute Host Revenue metrics if the logged-in user is a Host
+    let hostMetrics = null;
+    let hostBookings = [];
+    let propertyBreakdown = [];
+    let hostMonthlyTrend = [];
+
+    const isHost = Boolean(req.session.user && req.session.user.userType === 'host');
+    if (isHost) {
+      const rawHostBookings = await prisma.booking.findMany({
+        where: {
+          home: { hostId: userId.toString() }
+        },
+        include: { home: true, user: true },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      let totalHostRevenue = 0;
+      let totalHostedNights = 0;
+      let upcomingRevenue = 0;
+      let completedRevenue = 0;
+      const propMap = {};
+      const hostMonthMap = {};
+
+      hostBookings = rawHostBookings.map((b) => {
+        const amount = parseFloat(b.totalAmount) || 0;
+        totalHostRevenue += amount;
+
+        let nights = 1;
+        if (b.checkIn && b.checkOut) {
+          const inDate = new Date(b.checkIn);
+          const outDate = new Date(b.checkOut);
+          if (!isNaN(inDate.getTime()) && !isNaN(outDate.getTime()) && outDate > inDate) {
+            nights = Math.max(1, Math.ceil((outDate - inDate) / (1000 * 60 * 60 * 24)));
+          }
+        }
+        totalHostedNights += nights;
+
+        const isUpcoming = b.checkIn && b.checkIn >= todayStr;
+        if (isUpcoming) {
+          upcomingRevenue += amount;
+        } else {
+          completedRevenue += amount;
+        }
+
+        // Property aggregation
+        const propName = (b.home && b.home.houseName ? b.home.houseName : 'Property').trim();
+        if (!propMap[propName]) {
+          propMap[propName] = {
+            propertyName: propName,
+            location: b.home ? b.home.location : '',
+            photoUrl: b.home ? b.home.photoUrl : '',
+            totalRevenue: 0,
+            bookingsCount: 0,
+            nightsCount: 0
+          };
+        }
+        propMap[propName].totalRevenue += amount;
+        propMap[propName].bookingsCount += 1;
+        propMap[propName].nightsCount += nights;
+
+        // Monthly revenue aggregation
+        const bookingDate = b.checkIn ? new Date(b.checkIn) : new Date(b.createdAt);
+        const monthKey = !isNaN(bookingDate.getTime())
+          ? bookingDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+          : 'Unknown';
+
+        if (!hostMonthMap[monthKey]) {
+          hostMonthMap[monthKey] = {
+            month: monthKey,
+            totalRevenue: 0,
+            count: 0,
+            sortTime: !isNaN(bookingDate.getTime()) ? bookingDate.getTime() : 0
+          };
+        }
+        hostMonthMap[monthKey].totalRevenue += amount;
+        hostMonthMap[monthKey].count += 1;
+
+        return {
+          ...b,
+          calculatedNights: nights,
+          isUpcoming
+        };
+      });
+
+      const avgPayoutPerBooking = hostBookings.length > 0 ? Math.round(totalHostRevenue / hostBookings.length) : 0;
+      const avgNightlyRevenue = totalHostedNights > 0 ? Math.round(totalHostRevenue / totalHostedNights) : 0;
+
+      propertyBreakdown = Object.values(propMap)
+        .sort((a, b) => b.totalRevenue - a.totalRevenue)
+        .map((p) => ({
+          ...p,
+          percentage: totalHostRevenue > 0 ? Math.round((p.totalRevenue / totalHostRevenue) * 100) : 0
+        }));
+
+      hostMonthlyTrend = Object.values(hostMonthMap).sort((a, b) => a.sortTime - b.sortTime);
+
+      hostMetrics = {
+        totalRevenue: totalHostRevenue,
+        totalBookings: hostBookings.length,
+        totalHostedNights,
+        upcomingRevenue,
+        completedRevenue,
+        avgPayoutPerBooking,
+        avgNightlyRevenue,
+        topProperty: propertyBreakdown.length > 0 ? propertyBreakdown[0].propertyName : 'None'
+      };
+    }
+
     res.render('store/spend-analyzer', {
-      pageTitle: 'Travel Spend Analyzer & Budget',
+      pageTitle: 'Travel Spend & Revenue Analyzer',
       bookings: enrichedBookings,
       metrics: {
         totalSpend,
@@ -349,7 +457,11 @@ exports.getSpendAnalyzer = async (req, res, next) => {
         targetBudget
       },
       cityBreakdown,
-      monthlyTrend
+      monthlyTrend,
+      hostMetrics,
+      hostBookings,
+      propertyBreakdown,
+      hostMonthlyTrend
     });
   } catch (error) {
     console.error('Error in getSpendAnalyzer:', error);
@@ -362,6 +474,52 @@ exports.getSpendExport = async (req, res, next) => {
     const userId = req.session.user ? req.session.user.id : null;
     if (!userId) {
       return res.redirect('/login');
+    }
+
+    const exportType = req.query.type || 'spend'; // 'spend' or 'revenue'
+
+    if (exportType === 'revenue') {
+      const hostBookings = await prisma.booking.findMany({
+        where: {
+          home: { hostId: userId.toString() }
+        },
+        include: { home: true, user: true },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      const csvRows = [
+        ['Booking ID', 'Property Name', 'Guest Name', 'Guest Email', 'Check-In', 'Check-Out', 'Nights', 'Guests', 'Payout Revenue (INR)', 'Status', 'Booking Date']
+      ];
+
+      hostBookings.forEach((b) => {
+        let nights = 1;
+        if (b.checkIn && b.checkOut) {
+          const inDate = new Date(b.checkIn);
+          const outDate = new Date(b.checkOut);
+          if (!isNaN(inDate.getTime()) && !isNaN(outDate.getTime()) && outDate > inDate) {
+            nights = Math.max(1, Math.ceil((outDate - inDate) / (1000 * 60 * 60 * 24)));
+          }
+        }
+
+        csvRows.push([
+          `"${b.id}"`,
+          `"${(b.home ? b.home.houseName : '').replace(/"/g, '""')}"`,
+          `"${(b.guestName || '').replace(/"/g, '""')}"`,
+          `"${(b.guestEmail || '').replace(/"/g, '""')}"`,
+          `"${b.checkIn || ''}"`,
+          `"${b.checkOut || ''}"`,
+          nights,
+          b.guestsCount || 1,
+          b.totalAmount || 0,
+          `"${b.status || 'Confirmed'}"`,
+          `"${b.bookedAt || ''}"`
+        ]);
+      });
+
+      const csvContent = csvRows.map((row) => row.join(',')).join('\n');
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="airbnb-host-revenue-report-${Date.now()}.csv"`);
+      return res.status(200).send(csvContent);
     }
 
     const bookings = await prisma.booking.findMany({

@@ -20,6 +20,8 @@ storeRouter.post('/cancel-booking', isAuth, storeController.postCancelBooking);
 // Protected Spend Analyzer & Analytics (Requires login)
 storeRouter.get('/spend-analyzer', isAuth, storeController.getSpendAnalyzer);
 storeRouter.get('/spend-analyzer/export', isAuth, storeController.getSpendExport);
+storeRouter.get('/revenue', isAuth, (req, res) => res.redirect('/spend-analyzer?tab=revenue'));
+storeRouter.get('/earnings', isAuth, (req, res) => res.redirect('/spend-analyzer?tab=revenue'));
 
 // Protected Favorites / Wishlist (Requires login)
 storeRouter.get('/favorites', isAuth, storeController.getfavoritelist);

@@ -16,4 +16,9 @@ hostRouter.get('/edit-home/:homeId', hostcontroller.getEditHome);
 hostRouter.post('/edit-home', hostcontroller.postEditHome);
 hostRouter.post('/delete-home', hostcontroller.postDeleteHome);
 
+// Host Revenue & Earnings aliases
+hostRouter.get('/revenue', (req, res) => res.redirect('/spend-analyzer?tab=revenue'));
+hostRouter.get('/earnings', (req, res) => res.redirect('/spend-analyzer?tab=revenue'));
+hostRouter.get('/spend-analyzer', (req, res) => res.redirect('/spend-analyzer?tab=revenue'));
+
 module.exports = hostRouter;
