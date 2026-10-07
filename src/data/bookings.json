@@ -1,1 +1,54 @@
-[]
+[
+  {
+    "id": "book_demo_1",
+    "homeId": "5",
+    "userId": "user_guest_1",
+    "guestName": "Harsh (Guest)",
+    "guestEmail": "guest@airbnb.com",
+    "checkIn": "2026-05-10",
+    "checkOut": "2026-05-14",
+    "guestsCount": 2,
+    "totalAmount": 12000,
+    "bookedAt": "May 2, 2026",
+    "status": "Completed"
+  },
+  {
+    "id": "book_demo_2",
+    "homeId": "1",
+    "userId": "user_guest_1",
+    "guestName": "Harsh (Guest)",
+    "guestEmail": "guest@airbnb.com",
+    "checkIn": "2026-07-15",
+    "checkOut": "2026-07-18",
+    "guestsCount": 1,
+    "totalAmount": 7500,
+    "bookedAt": "Jul 10, 2026",
+    "status": "Completed"
+  },
+  {
+    "id": "book_demo_3",
+    "homeId": "4",
+    "userId": "user_guest_1",
+    "guestName": "Harsh (Guest)",
+    "guestEmail": "guest@airbnb.com",
+    "checkIn": "2026-08-20",
+    "checkOut": "2026-08-22",
+    "guestsCount": 2,
+    "totalAmount": 16000,
+    "bookedAt": "Aug 15, 2026",
+    "status": "Completed"
+  },
+  {
+    "id": "book_demo_4",
+    "homeId": "2",
+    "userId": "user_guest_1",
+    "guestName": "Harsh (Guest)",
+    "guestEmail": "guest@airbnb.com",
+    "checkIn": "2026-11-05",
+    "checkOut": "2026-11-08",
+    "guestsCount": 3,
+    "totalAmount": 15000,
+    "bookedAt": "Oct 1, 2026",
+    "status": "Confirmed"
+  }
+]

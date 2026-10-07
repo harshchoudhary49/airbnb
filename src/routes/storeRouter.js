@@ -17,6 +17,10 @@ storeRouter.post('/reserve', isAuth, storeController.postReserveHome);
 storeRouter.get('/bookings', isAuth, storeController.getBookings);
 storeRouter.post('/cancel-booking', isAuth, storeController.postCancelBooking);
 
+// Protected Spend Analyzer & Analytics (Requires login)
+storeRouter.get('/spend-analyzer', isAuth, storeController.getSpendAnalyzer);
+storeRouter.get('/spend-analyzer/export', isAuth, storeController.getSpendExport);
+
 // Protected Favorites / Wishlist (Requires login)
 storeRouter.get('/favorites', isAuth, storeController.getfavoritelist);
 storeRouter.post('/favorites/add', isAuth, storeController.postAddToFavorites);

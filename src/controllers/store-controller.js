@@ -1,6 +1,7 @@
 const Home = require("../models/home");
 const Favorite = require("../models/favorite");
 const Booking = require("../models/booking");
+const prisma = require("../db/prisma");
 
 exports.getIndex = (req, res, next) => {
   const searchQuery = (req.query.search || '').trim().toLowerCase();
@@ -227,4 +228,182 @@ exports.postRemoveFromFavorites = (req, res, next) => {
     const referrer = req.get('Referrer') || '/favorites';
     res.redirect(referrer);
   });
+};
+
+exports.getSpendAnalyzer = async (req, res, next) => {
+  try {
+    const userId = req.session.user ? req.session.user.id : null;
+    if (!userId) {
+      return res.redirect('/login');
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where: { userId: userId.toString() },
+      include: { home: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const totalBookings = bookings.length;
+    let totalSpend = 0;
+    let totalNights = 0;
+    let upcomingSpend = 0;
+    let completedSpend = 0;
+    const cityMap = {};
+    const monthlyMap = {};
+
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const processedBookings = bookings.map((b) => {
+      const amount = parseFloat(b.totalAmount) || 0;
+      totalSpend += amount;
+
+      // Calculate nights
+      let nights = 1;
+      if (b.checkIn && b.checkOut) {
+        const inDate = new Date(b.checkIn);
+        const outDate = new Date(b.checkOut);
+        if (!isNaN(inDate.getTime()) && !isNaN(outDate.getTime()) && outDate > inDate) {
+          nights = Math.max(1, Math.ceil((outDate - inDate) / (1000 * 60 * 60 * 24)));
+        }
+      }
+      totalNights += nights;
+
+      // Upcoming vs Past spend
+      const isUpcoming = b.checkIn && b.checkIn >= todayStr;
+      if (isUpcoming) {
+        upcomingSpend += amount;
+      } else {
+        completedSpend += amount;
+      }
+
+      // City / Location aggregation
+      const city = (b.home && b.home.location ? b.home.location : 'Other').trim();
+      if (!cityMap[city]) {
+        cityMap[city] = { city, totalAmount: 0, count: 0, nights: 0 };
+      }
+      cityMap[city].totalAmount += amount;
+      cityMap[city].count += 1;
+      cityMap[city].nights += nights;
+
+      // Monthly aggregation
+      const bookingDate = b.checkIn ? new Date(b.checkIn) : new Date(b.createdAt);
+      const monthKey = !isNaN(bookingDate.getTime())
+        ? bookingDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+        : 'Unknown';
+
+      if (!monthlyMap[monthKey]) {
+        monthlyMap[monthKey] = {
+          month: monthKey,
+          totalAmount: 0,
+          count: 0,
+          sortTime: !isNaN(bookingDate.getTime()) ? bookingDate.getTime() : 0
+        };
+      }
+      monthlyMap[monthKey].totalAmount += amount;
+      monthlyMap[monthKey].count += 1;
+
+      return {
+        ...b,
+        calculatedNights: nights,
+        isUpcoming
+      };
+    });
+
+    const avgNightlyRate = totalNights > 0 ? Math.round(totalSpend / totalNights) : 0;
+    const avgTripCost = totalBookings > 0 ? Math.round(totalSpend / totalBookings) : 0;
+
+    // Sort cities by amount descending
+    const cityBreakdown = Object.values(cityMap)
+      .sort((a, b) => b.totalAmount - a.totalAmount)
+      .map((c) => ({
+        ...c,
+        percentage: totalSpend > 0 ? Math.round((c.totalAmount / totalSpend) * 100) : 0
+      }));
+
+    const topDestination = cityBreakdown.length > 0 ? cityBreakdown[0].city : 'None';
+
+    // Sort monthly trend chronologically
+    const monthlyTrend = Object.values(monthlyMap).sort((a, b) => a.sortTime - b.sortTime);
+
+    // Compute percentage of spend per trip for table
+    const enrichedBookings = processedBookings.map((b) => ({
+      ...b,
+      spendPercentage: totalSpend > 0 ? ((b.totalAmount / totalSpend) * 100).toFixed(1) : 0
+    }));
+
+    // Default target budget
+    const targetBudget = 60000;
+
+    res.render('store/spend-analyzer', {
+      pageTitle: 'Travel Spend Analyzer & Budget',
+      bookings: enrichedBookings,
+      metrics: {
+        totalSpend,
+        totalBookings,
+        totalNights,
+        avgNightlyRate,
+        avgTripCost,
+        upcomingSpend,
+        completedSpend,
+        topDestination,
+        targetBudget
+      },
+      cityBreakdown,
+      monthlyTrend
+    });
+  } catch (error) {
+    console.error('Error in getSpendAnalyzer:', error);
+    next(error);
+  }
+};
+
+exports.getSpendExport = async (req, res, next) => {
+  try {
+    const userId = req.session.user ? req.session.user.id : null;
+    if (!userId) {
+      return res.redirect('/login');
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where: { userId: userId.toString() },
+      include: { home: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const csvRows = [
+      ['Booking ID', 'Property Name', 'Location', 'Check-In', 'Check-Out', 'Nights', 'Guests', 'Total Amount (INR)', 'Status', 'Booked Date']
+    ];
+
+    bookings.forEach((b) => {
+      let nights = 1;
+      if (b.checkIn && b.checkOut) {
+        const inDate = new Date(b.checkIn);
+        const outDate = new Date(b.checkOut);
+        if (!isNaN(inDate.getTime()) && !isNaN(outDate.getTime()) && outDate > inDate) {
+          nights = Math.max(1, Math.ceil((outDate - inDate) / (1000 * 60 * 60 * 24)));
+        }
+      }
+
+      csvRows.push([
+        `"${b.id}"`,
+        `"${(b.home ? b.home.houseName : '').replace(/"/g, '""')}"`,
+        `"${(b.home ? b.home.location : '').replace(/"/g, '""')}"`,
+        `"${b.checkIn || ''}"`,
+        `"${b.checkOut || ''}"`,
+        nights,
+        b.guestsCount || 1,
+        b.totalAmount || 0,
+        `"${b.status || 'Confirmed'}"`,
+        `"${b.bookedAt || ''}"`
+      ]);
+    });
+
+    const csvContent = csvRows.map((row) => row.join(',')).join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="airbnb-spend-report-${Date.now()}.csv"`);
+    res.status(200).send(csvContent);
+  } catch (error) {
+    console.error('Error in getSpendExport:', error);
+    next(error);
+  }
 };
