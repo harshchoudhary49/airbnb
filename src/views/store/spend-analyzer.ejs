@@ -322,7 +322,7 @@
                       <td class="py-3.5 px-3 whitespace-nowrap">
                         <div class="flex items-center gap-2">
                           <div class="w-12 bg-gray-100 rounded-full h-2 overflow-hidden">
-                            <div class="bg-red-500 h-full rounded-full" style="width: <%= booking.spendPercentage %>%"></div>
+                            <div class="bg-red-500 h-full rounded-full spend-pct-bar" data-width="<%= booking.spendPercentage %>"></div>
                           </div>
                           <span class="text-xs font-bold text-gray-600"><%= booking.spendPercentage %>%</span>
                         </div>
@@ -648,6 +648,9 @@
         if (urlParams.get('tab') === 'revenue' || window.location.hash === '#revenue') {
           switchTab('revenue');
         }
+        document.querySelectorAll('.spend-pct-bar').forEach(function(el) {
+          el.style.width = (el.getAttribute('data-width') || 0) + '%';
+        });
       });
 
       // 1. Spend Analyzer Budget Tracker & Charts
