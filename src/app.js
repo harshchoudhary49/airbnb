@@ -7,6 +7,8 @@ const path = require('path');
 // External Module
 const express = require('express');
 const session = require('express-session');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 // Local Module
 const storeRouter = require('./routes/storeRouter');
@@ -14,8 +16,26 @@ const hostRouter = require('./routes/hostRouter');
 const authRouter = require('./routes/authRouter');
 const rootDir = require('./utils/pathUtil');
 const prisma = require('./db/prisma');
+const csrfProtection = require('./middleware/csrf');
 
 const app = express();
+
+// Security Headers with Helmet (Protection against Clickjacking, MIME-sniffing, etc.)
+app.use(
+  helmet({
+    contentSecurityPolicy: false // Allows FontAwesome CDN, Google Fonts, and external images
+  })
+);
+
+// Global Rate Limiter to prevent DoS & automated abuse
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use(globalLimiter);
 
 // Trust reverse proxy (essential for production deployments like Render, Heroku, AWS, Nginx)
 app.set('trust proxy', 1);
@@ -40,6 +60,9 @@ app.use(
     }
   })
 );
+
+// CSRF Protection Middleware
+app.use(csrfProtection);
 
 // Global view variables for authentication state & route tracking
 app.use((req, res, next) => {

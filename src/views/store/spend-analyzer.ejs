@@ -602,7 +602,7 @@
         hostMonthlyTrend: (typeof hostMonthlyTrend !== 'undefined' && hostMonthlyTrend) || [],
         propertyBreakdown: (typeof propertyBreakdown !== 'undefined' && propertyBreakdown) || [],
         totalHostRevenue: (typeof hostMetrics !== 'undefined' && hostMetrics && hostMetrics.totalRevenue) || 0
-      }) %>
+      }).replace(/</g, '\\u003c') %>
     </script>
 
     <!-- ========================================== -->

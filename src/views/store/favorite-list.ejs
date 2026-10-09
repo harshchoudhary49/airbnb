@@ -36,6 +36,7 @@
 
                 <!-- Remove Favorite Button -->
                 <form action="/favorites/remove" method="POST" class="absolute top-3 right-3">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
                   <input type="hidden" name="homeId" value="<%= home.id %>" />
                   <button 
                     type="submit" 

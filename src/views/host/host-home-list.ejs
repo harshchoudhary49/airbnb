@@ -82,6 +82,7 @@
                       method="POST" 
                       onsubmit="return confirm('Are you sure you want to permanently delete this listing?');"
                       class="w-full">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
                       <input type="hidden" name="homeId" value="<%= home.id %>" />
                       <button 
                         type="submit" 

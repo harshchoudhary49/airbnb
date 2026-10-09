@@ -17,6 +17,7 @@
         </div>
 
         <form action="/host/edit-home" method="POST" class="p-6 md:p-8 space-y-5">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
           <input type="hidden" name="id" value="<%= home.id %>" />
 
           <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>

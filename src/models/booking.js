@@ -38,7 +38,7 @@ module.exports = class Booking {
     id = null
   ) {
     this.id = id;
-    this.userId = userId || 'user_guest_1';
+    this.userId = userId ? userId.toString() : null;
     this.homeId = homeId;
     this.houseName = houseName;
     this.price = parseFloat(price) || 0;

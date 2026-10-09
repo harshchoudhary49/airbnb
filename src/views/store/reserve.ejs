@@ -59,6 +59,7 @@
           <!-- Left 2 Cols: Form -->
           <div class="md:col-span-2">
             <form action="/reserve" method="POST" id="bookingForm" class="space-y-5">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
               <input type="hidden" name="homeId" value="<%= home.id %>" />
               <input type="hidden" name="houseName" value="<%= home.houseName %>" />
               <input type="hidden" name="price" id="homePrice" value="<%= home.price %>" />
@@ -218,7 +219,7 @@
 
     <!-- Safe JSON Data Block for Calendar Availability -->
     <script type="application/json" id="bookedRangesData">
-      <%- JSON.stringify(typeof bookedRanges !== 'undefined' ? bookedRanges : []) %>
+      <%- JSON.stringify(typeof bookedRanges !== 'undefined' ? bookedRanges : []).replace(/</g, '\\u003c') %>
     </script>
 
     <!-- Flatpickr Date Picker Library -->

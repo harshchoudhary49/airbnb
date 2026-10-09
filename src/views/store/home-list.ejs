@@ -56,6 +56,7 @@
                 
                 <!-- Favorite Toggle -->
                 <form action="<%= isFav ? '/favorites/remove' : '/favorites/add' %>" method="POST" class="absolute top-3 right-3">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
                   <input type="hidden" name="homeId" value="<%= home.id %>" />
                   <button 
                     type="submit" 
