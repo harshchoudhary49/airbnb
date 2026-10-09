@@ -28,4 +28,8 @@ storeRouter.get('/favorites', isAuth, storeController.getfavoritelist);
 storeRouter.post('/favorites/add', isAuth, storeController.postAddToFavorites);
 storeRouter.post('/favorites/remove', isAuth, storeController.postRemoveFromFavorites);
 
+// Protected Reviews & Ratings (Requires login)
+storeRouter.post('/homes/:homeId/reviews', isAuth, storeController.postAddReview);
+storeRouter.post('/reviews/:reviewId/delete', isAuth, storeController.postDeleteReview);
+
 module.exports = storeRouter;

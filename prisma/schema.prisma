@@ -21,6 +21,7 @@ model User {
   homes     Home[]     @relation("HostHomes")
   bookings  Booking[]  @relation("UserBookings")
   favorites Favorite[] @relation("UserFavorites")
+  reviews   Review[]   @relation("UserReviews")
 
   @@map("users")
 }
@@ -39,6 +40,7 @@ model Home {
 
   bookings    Booking[]  @relation("HomeBookings")
   favorites   Favorite[] @relation("HomeFavorites")
+  reviews     Review[]   @relation("HomeReviews")
 
   @@map("homes")
 }
@@ -72,4 +74,17 @@ model Favorite {
 
   @@unique([userId, homeId])
   @@map("favorites")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int      @default(5)
+  comment   String   @db.Text
+  homeId    String
+  home      Home     @relation("HomeReviews", fields: [homeId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation("UserReviews", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("reviews")
 }

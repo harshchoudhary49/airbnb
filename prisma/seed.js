@@ -158,6 +158,76 @@ async function seed() {
     }
   }
 
+  // 6. Seed Sample Reviews
+  console.log('Seeding sample reviews...');
+  const firstUser = allUsers[0] || { id: 'user_guest_1' };
+  const sampleReviews = [
+    {
+      homeId: '1',
+      rating: 5,
+      comment: 'Absolutely breathtaking place! The view was even better than the pictures. Impeccably clean, great Wi-Fi, and the host was super communicative.'
+    },
+    {
+      homeId: '1',
+      rating: 5,
+      comment: 'One of the best Airbnb experiences we have ever had. The kitchen was fully equipped and check-in was seamless. Will definitely return!'
+    },
+    {
+      homeId: '1',
+      rating: 4,
+      comment: 'Very cozy and modern apartment. Walking distance to great cafes and beach spots. Highly recommended for weekend getaways.'
+    },
+    {
+      homeId: '4',
+      rating: 5,
+      comment: 'Incredible mountain serenity. Hot water, cozy fireplace, and stunning sunrise view from the balcony. 10/10!'
+    },
+    {
+      homeId: '5',
+      rating: 5,
+      comment: 'Spectacular luxury villa. The pool was pristine and our family had an amazing stay. Worth every single penny.'
+    },
+    {
+      homeId: '10',
+      rating: 4,
+      comment: 'Spacious and nicely decorated. Check-in was smooth and the neighborhood is very peaceful.'
+    }
+  ];
+
+  for (let i = 0; i < sampleReviews.length; i++) {
+    const rev = sampleReviews[i];
+    const homeExists = await prisma.home.findUnique({ where: { id: rev.homeId } });
+    if (!homeExists) continue;
+
+    const reviewId = `demo_review_${i + 1}`;
+    await prisma.review.upsert({
+      where: { id: reviewId },
+      update: {
+        rating: rev.rating,
+        comment: rev.comment
+      },
+      create: {
+        id: reviewId,
+        homeId: rev.homeId,
+        userId: firstUser.id,
+        rating: rev.rating,
+        comment: rev.comment
+      }
+    });
+
+    // Synchronize home rating
+    const stats = await prisma.review.aggregate({
+      where: { homeId: rev.homeId },
+      _avg: { rating: true }
+    });
+    if (stats._avg.rating) {
+      await prisma.home.update({
+        where: { id: rev.homeId },
+        data: { rating: stats._avg.rating.toFixed(1) }
+      });
+    }
+  }
+
   console.log('--- PostgreSQL Seed Completed Successfully ---');
 }
 

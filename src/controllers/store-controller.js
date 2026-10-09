@@ -1,6 +1,7 @@
 const Home = require("../models/home");
 const Favorite = require("../models/favorite");
 const Booking = require("../models/booking");
+const Review = require("../models/review");
 const prisma = require("../db/prisma");
 
 exports.getIndex = (req, res, next) => {
@@ -53,69 +54,210 @@ exports.getHomes = (req, res, next) => {
   });
 };
 
-exports.getHomeDetails = (req, res, next) => {
-  const homeId = req.params.homeId;
-  const userId = req.session.user ? req.session.user.id : null;
+exports.getHomeDetails = async (req, res, next) => {
+  try {
+    const homeId = req.params.homeId;
+    const userId = req.session.user ? req.session.user.id : null;
 
-  Home.findById(homeId, (home) => {
+    const home = await Home.findById(homeId);
     if (!home) {
       return res.status(404).render('404', { pageTitle: 'Home Not Found' });
     }
-    Favorite.getFavoriteIds(userId, (favoriteIds) => {
-      const isFavorite = favoriteIds.includes(home.id.toString());
-      res.render('store/home-detail', {
-        home: home,
-        isFavorite: isFavorite,
-        pageTitle: home.houseName
-      });
+
+    const [favoriteIds, reviews] = await Promise.all([
+      new Promise((resolve) => Favorite.getFavoriteIds(userId, resolve)),
+      Review.fetchByHomeId(homeId)
+    ]);
+
+    const isFavorite = favoriteIds.includes(home.id.toString());
+    const totalReviews = reviews.length;
+    const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    let avgRating = 'New';
+
+    if (totalReviews > 0) {
+      const sum = reviews.reduce((acc, r) => {
+        counts[r.rating] = (counts[r.rating] || 0) + 1;
+        return acc + r.rating;
+      }, 0);
+      avgRating = (sum / totalReviews).toFixed(1);
+    }
+
+    const percentages = {};
+    for (let star = 1; star <= 5; star++) {
+      percentages[star] = totalReviews > 0 ? Math.round((counts[star] / totalReviews) * 100) : 0;
+    }
+
+    const userReview = userId ? reviews.find((r) => r.userId === userId) : null;
+
+    res.render('store/home-detail', {
+      home: home,
+      isFavorite: isFavorite,
+      reviews: reviews,
+      reviewStats: {
+        avg: avgRating,
+        total: totalReviews,
+        counts: counts,
+        percentages: percentages
+      },
+      hasUserReviewed: Boolean(userReview),
+      userReview: userReview,
+      reviewError: req.query.reviewError || null,
+      pageTitle: home.houseName
     });
-  });
+  } catch (err) {
+    console.error('Error in getHomeDetails:', err);
+    res.status(500).render('404', { pageTitle: 'Server Error' });
+  }
 };
 
-exports.getReserveHome = (req, res, next) => {
-  const homeId = req.params.homeId;
-  Home.findById(homeId, (home) => {
+exports.postAddReview = async (req, res, next) => {
+  try {
+    const homeId = req.params.homeId;
+    const userId = req.session.user ? req.session.user.id : null;
+    const { rating, comment } = req.body;
+
+    if (!userId) {
+      return res.redirect('/login');
+    }
+
+    const parsedRating = parseInt(rating, 10);
+    if (!parsedRating || parsedRating < 1 || parsedRating > 5 || !comment || !comment.trim()) {
+      return res.redirect(`/homes/${homeId}?reviewError=${encodeURIComponent('Please select a star rating (1-5) and write a comment.')}#reviews-section`);
+    }
+
+    await Review.create({
+      homeId,
+      userId,
+      rating: parsedRating,
+      comment: comment.trim()
+    });
+
+    res.redirect(`/homes/${homeId}#reviews-section`);
+  } catch (err) {
+    console.error('Error posting review:', err);
+    res.redirect(`/homes/${req.params.homeId}`);
+  }
+};
+
+exports.postDeleteReview = async (req, res, next) => {
+  try {
+    const reviewId = req.params.reviewId;
+    const userId = req.session.user ? req.session.user.id : null;
+    const returnHomeId = req.body.homeId;
+
+    if (!userId) {
+      return res.redirect('/login');
+    }
+
+    await Review.deleteById(reviewId, userId);
+    res.redirect(`/homes/${returnHomeId}#reviews-section`);
+  } catch (err) {
+    console.error('Error deleting review:', err);
+    res.redirect('/homes');
+  }
+};
+
+exports.getReserveHome = async (req, res, next) => {
+  try {
+    const homeId = req.params.homeId;
+    const home = await Home.findById(homeId);
     if (!home) {
       return res.redirect('/homes');
     }
+
+    // Fetch confirmed bookings for this home to disable booked dates in calendar
+    const confirmedBookings = await prisma.booking.findMany({
+      where: {
+        homeId: homeId.toString(),
+        status: { in: ['Confirmed', 'Active'] }
+      },
+      select: {
+        checkIn: true,
+        checkOut: true
+      }
+    });
+
+    const bookedRanges = confirmedBookings.map((b) => ({
+      from: b.checkIn,
+      to: b.checkOut
+    }));
+
     res.render('store/reserve', {
       home: home,
+      bookedRanges: bookedRanges,
+      errorMessage: req.query.error || null,
       pageTitle: `Reserve - ${home.houseName}`
     });
-  });
+  } catch (err) {
+    console.error('Error in getReserveHome:', err);
+    res.redirect('/homes');
+  }
 };
 
-exports.postReserveHome = (req, res, next) => {
-  const {
-    homeId,
-    checkIn,
-    checkOut,
-    guestsCount,
-    guestName,
-    guestEmail
-  } = req.body;
+exports.postReserveHome = async (req, res, next) => {
+  try {
+    const {
+      homeId,
+      checkIn,
+      checkOut,
+      guestsCount,
+      guestName,
+      guestEmail
+    } = req.body;
 
-  if (!req.session.user) {
-    return res.redirect('/login');
-  }
+    if (!req.session.user) {
+      return res.redirect('/login');
+    }
 
-  const userId = req.session.user.id;
+    const userId = req.session.user.id;
 
-  // Retrieve authentic home details from DB to prevent client-side price tampering
-  Home.findById(homeId, (home) => {
+    // Retrieve authentic home details from DB to prevent client-side price tampering
+    const home = await Home.findById(homeId);
     if (!home) {
       return res.redirect('/homes');
     }
 
-    // Validate dates: checkIn must be valid, checkOut must be after checkIn
+    // Validate dates: checkIn must be valid, checkOut must be strictly after checkIn
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     if (
       isNaN(checkInDate.getTime()) ||
       isNaN(checkOutDate.getTime()) ||
-      checkOutDate <= checkInDate
+      checkOutDate <= checkInDate ||
+      checkInDate < today
     ) {
-      return res.redirect(`/reserve/${homeId}`);
+      return res.redirect(
+        `/reserve/${homeId}?error=${encodeURIComponent(
+          'Please select a valid check-in and check-out date range in the future.'
+        )}`
+      );
+    }
+
+    // AIRBNB DOUBLE-BOOKING PREVENTER:
+    // Check if any existing confirmed booking overlaps with the selected date range.
+    // Interval overlap condition: newCheckIn < existingCheckOut AND newCheckOut > existingCheckIn
+    const confirmedBookings = await prisma.booking.findMany({
+      where: {
+        homeId: homeId.toString(),
+        status: { in: ['Confirmed', 'Active'] }
+      }
+    });
+
+    const isOverlapping = confirmedBookings.some((b) => {
+      const bIn = new Date(b.checkIn);
+      const bOut = new Date(b.checkOut);
+      return checkInDate < bOut && checkOutDate > bIn;
+    });
+
+    if (isOverlapping) {
+      return res.redirect(
+        `/reserve/${homeId}?error=${encodeURIComponent(
+          'The selected dates are no longer available. Another guest has already reserved this property for overlapping nights. Please select alternate dates.'
+        )}`
+      );
     }
 
     const diffTime = checkOutDate.getTime() - checkInDate.getTime();
@@ -141,10 +283,18 @@ exports.postReserveHome = (req, res, next) => {
     booking.save((err) => {
       if (err) {
         console.error('Error saving booking:', err);
+        return res.redirect(
+          `/reserve/${homeId}?error=${encodeURIComponent(
+            'Unable to process booking at this time. Please try again.'
+          )}`
+        );
       }
       res.redirect('/bookings');
     });
-  });
+  } catch (err) {
+    console.error('Error in postReserveHome:', err);
+    res.redirect(`/reserve/${req.body.homeId}`);
+  }
 };
 
 exports.getBookings = (req, res, next) => {
