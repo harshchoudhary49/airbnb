@@ -1,6 +1,0 @@
-{
-  "html.validate.styles": false,
-  "files.associations": {
-    "*.ejs": "html"
-  }
-}
