@@ -7,14 +7,14 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "build:css": "tailwindcss -i ./input.css -o ./src/public/output.css --minify",
-    "build": "npm run build:css && prisma generate",
-    "build:deploy": "npm run build && prisma db push",
-    "tailwind": "tailwindcss -i ./input.css -o ./src/public/output.css --watch",
-    "postinstall": "prisma generate",
-    "db:push": "prisma db push",
-    "db:seed": "prisma db seed",
-    "db:studio": "prisma studio"
+    "build:css": "npx @tailwindcss/cli -i ./input.css -o ./src/public/output.css --minify",
+    "build": "npm run build:css && npx prisma generate",
+    "build:deploy": "npm run build && npx prisma db push",
+    "tailwind": "npx @tailwindcss/cli -i ./input.css -o ./src/public/output.css --watch",
+    "postinstall": "npx prisma generate",
+    "db:push": "npx prisma db push",
+    "db:seed": "npx prisma db seed",
+    "db:studio": "npx prisma studio"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -35,11 +35,11 @@
     "express-session": "^1.19.0",
     "helmet": "^8.3.0",
     "pg": "^8.23.1",
+    "prisma": "^6.19.3",
     "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14",
-    "prisma": "^6.19.3"
+    "nodemon": "^3.1.14"
   },
   "engines": {
     "node": ">=18.0.0"
