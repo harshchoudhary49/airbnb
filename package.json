@@ -9,10 +9,10 @@
     "dev": "nodemon src/app.js",
     "build:css": "npx @tailwindcss/cli -i ./input.css -o ./src/public/output.css --minify",
     "build": "npx prisma generate",
-    "build:deploy": "npm install && npx prisma generate && npx prisma db push",
+    "build:deploy": "npm install && npx prisma generate && npx prisma db push --accept-data-loss",
     "tailwind": "npx @tailwindcss/cli -i ./input.css -o ./src/public/output.css --watch",
     "postinstall": "npx prisma generate",
-    "db:push": "npx prisma db push",
+    "db:push": "npx prisma db push --accept-data-loss",
     "db:seed": "npx prisma db seed",
     "db:studio": "npx prisma studio"
   },
