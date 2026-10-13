@@ -103,10 +103,22 @@ exports.postSignup = (req, res, next) => {
     });
   }
 
-  if (cleanedPassword.length < 6) {
+  // Email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(cleanedEmail)) {
     return res.status(422).render('auth/signup', {
       pageTitle: 'Sign Up - Airbnb',
-      errorMessage: 'Password must be at least 6 characters long.',
+      errorMessage: 'Please enter a valid email address.',
+      oldInput: { name: cleanedName, email: cleanedEmail, userType: validUserType }
+    });
+  }
+
+  // Password complexity: minimum 8 characters, at least 1 uppercase, 1 lowercase, 1 digit
+  const passwordComplexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  if (!passwordComplexityRegex.test(cleanedPassword)) {
+    return res.status(422).render('auth/signup', {
+      pageTitle: 'Sign Up - Airbnb',
+      errorMessage: 'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one number.',
       oldInput: { name: cleanedName, email: cleanedEmail, userType: validUserType }
     });
   }

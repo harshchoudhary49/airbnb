@@ -7,6 +7,7 @@ const path = require('path');
 // External Module
 const express = require('express');
 const session = require('express-session');
+const PgSession = require('connect-pg-simple')(session);
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
@@ -20,10 +21,42 @@ const csrfProtection = require('./middleware/csrf');
 
 const app = express();
 
-// Security Headers with Helmet (Protection against Clickjacking, MIME-sniffing, etc.)
+// Security Headers with Helmet (Protection against Clickjacking, MIME-sniffing, XSS, etc.)
 app.use(
   helmet({
-    contentSecurityPolicy: false // Allows FontAwesome CDN, Google Fonts, and external images
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "'unsafe-eval'",
+          "https://cdn.tailwindcss.com",
+          "https://cdnjs.cloudflare.com"
+        ],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://cdnjs.cloudflare.com",
+          "https://fonts.googleapis.com"
+        ],
+        fontSrc: [
+          "'self'",
+          "https://cdnjs.cloudflare.com",
+          "https://fonts.gstatic.com",
+          "data:"
+        ],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https:"
+        ],
+        connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'self'"]
+      }
+    },
+    crossOriginEmbedderPolicy: false
   })
 );
 
@@ -43,12 +76,32 @@ app.set('trust proxy', 1);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+// Request body size limits (prevents payload exhaustion / buffer overflow DoS)
+app.use(express.urlencoded({ extended: true, limit: '500kb' }));
+app.use(express.json({ limit: '500kb' }));
 
-// Session configuration
+// Session configuration with persistent PostgreSQL store
+let sessionStore;
+if (process.env.DATABASE_URL) {
+  try {
+    sessionStore = new PgSession({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: true,
+      tableName: 'session'
+    });
+  } catch (err) {
+    console.error('Failed to initialize PostgreSQL session store, falling back to memory store:', err);
+  }
+}
+
+if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
+  console.warn('⚠️ WARNING: SESSION_SECRET is not set in environment variables! Please provide a strong secret in production.');
+}
+
 app.use(
   session({
+    name: process.env.NODE_ENV === 'production' ? '__Host-airbnb_session' : 'airbnb_sid',
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || 'airbnb_production_key_random_long_secret_hash',
     resave: false,
     saveUninitialized: false,

@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: airbnb-app
+    runtime: node
+    plan: free
+    buildCommand: npm run build && npx prisma db push
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: airbnb-postgres
+          property: connectionString
+
+databases:
+  - name: airbnb-postgres
+    plan: free
+    databaseName: airbnb
+    user: airbnb_user
