@@ -3,7 +3,7 @@ services:
     name: airbnb-app
     runtime: node
     plan: free
-    buildCommand: npm run build && npx prisma db push
+    buildCommand: npm run build:deploy
     startCommand: npm start
     healthCheckPath: /health
     envVars:
