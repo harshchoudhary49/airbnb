@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
+const { getSafeRedirectUrl } = require('../utils/urlUtil');
 
 exports.getLogin = (req, res, next) => {
   if (req.session && req.session.isLoggedIn) {
@@ -28,6 +29,16 @@ exports.postLogin = (req, res, next) => {
     });
   }
 
+  // Max length checks to prevent input buffer exhaustion
+  if (cleanedEmail.length > 255 || cleanedPassword.length > 128) {
+    return res.status(422).render('auth/login', {
+      pageTitle: 'Log In - Airbnb',
+      errorMessage: 'Invalid email or password length.',
+      infoMessage: null,
+      oldInput: { email: cleanedEmail }
+    });
+  }
+
   User.findByEmail(cleanedEmail, async (user) => {
     if (!user) {
       return res.status(422).render('auth/login', {
@@ -50,11 +61,17 @@ exports.postLogin = (req, res, next) => {
         };
         return req.session.save((err) => {
           if (err) console.error('Session save error:', err);
-          const redirectUrl =
+          const rawTarget =
             req.session.returnTo ||
             (user.userType === 'host' ? '/host/host-home-list' : '/');
           delete req.session.returnTo;
-          res.redirect(redirectUrl);
+          // Prevent Open Redirect via stored returnTo
+          const safeTarget = getSafeRedirectUrl(
+            rawTarget,
+            req,
+            user.userType === 'host' ? '/host/host-home-list' : '/'
+          );
+          res.redirect(safeTarget);
         });
       }
 
@@ -109,6 +126,31 @@ exports.postSignup = (req, res, next) => {
     return res.status(422).render('auth/signup', {
       pageTitle: 'Sign Up - Airbnb',
       errorMessage: 'Please enter a valid email address.',
+      oldInput: { name: cleanedName, email: cleanedEmail, userType: validUserType }
+    });
+  }
+
+  // Max length checks
+  if (cleanedName.length > 100) {
+    return res.status(422).render('auth/signup', {
+      pageTitle: 'Sign Up - Airbnb',
+      errorMessage: 'Full name cannot exceed 100 characters.',
+      oldInput: { name: cleanedName, email: cleanedEmail, userType: validUserType }
+    });
+  }
+
+  if (cleanedEmail.length > 255) {
+    return res.status(422).render('auth/signup', {
+      pageTitle: 'Sign Up - Airbnb',
+      errorMessage: 'Email address cannot exceed 255 characters.',
+      oldInput: { name: cleanedName, email: cleanedEmail, userType: validUserType }
+    });
+  }
+
+  if (cleanedPassword.length > 128) {
+    return res.status(422).render('auth/signup', {
+      pageTitle: 'Sign Up - Airbnb',
+      errorMessage: 'Password cannot exceed 128 characters.',
       oldInput: { name: cleanedName, email: cleanedEmail, userType: validUserType }
     });
   }

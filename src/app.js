@@ -19,26 +19,43 @@ const rootDir = require('./utils/pathUtil');
 const prisma = require('./db/prisma');
 const csrfProtection = require('./middleware/csrf');
 
+const crypto = require('crypto');
+
+// Validate session secret at startup - Crash immediately if missing to prevent insecure execution
+if (!process.env.SESSION_SECRET || !process.env.SESSION_SECRET.trim()) {
+  console.error('FATAL CONFIGURATION ERROR: SESSION_SECRET environment variable is missing.');
+  console.error('Refusing to start server with hardcoded or fallback secret.');
+  process.exit(1);
+}
+
 const app = express();
 
+// Generate CSP nonce per request for secure inline scripts
+app.use((req, res, next) => {
+  res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+  next();
+});
+
 // Security Headers with Helmet (Protection against Clickjacking, MIME-sniffing, XSS, etc.)
-app.use(
+// Strictly disallows 'unsafe-inline' and 'unsafe-eval' by enforcing cryptographic per-request nonces
+app.use((req, res, next) => {
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: [
           "'self'",
-          "'unsafe-inline'",
-          "'unsafe-eval'",
+          `'nonce-${res.locals.cspNonce}'`,
           "https://cdn.tailwindcss.com",
-          "https://cdnjs.cloudflare.com"
+          "https://cdnjs.cloudflare.com",
+          "https://cdn.jsdelivr.net"
         ],
         styleSrc: [
           "'self'",
-          "'unsafe-inline'",
+          `'nonce-${res.locals.cspNonce}'`,
           "https://cdnjs.cloudflare.com",
-          "https://fonts.googleapis.com"
+          "https://fonts.googleapis.com",
+          "https://cdn.jsdelivr.net"
         ],
         fontSrc: [
           "'self'",
@@ -57,8 +74,8 @@ app.use(
       }
     },
     crossOriginEmbedderPolicy: false
-  })
-);
+  })(req, res, next);
+});
 
 // Global Rate Limiter to prevent DoS & automated abuse
 const globalLimiter = rateLimit({
@@ -94,15 +111,11 @@ if (process.env.DATABASE_URL) {
   }
 }
 
-if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
-  console.warn('⚠️ WARNING: SESSION_SECRET is not set in environment variables! Please provide a strong secret in production.');
-}
-
 app.use(
   session({
     name: process.env.NODE_ENV === 'production' ? '__Host-airbnb_session' : 'airbnb_sid',
     store: sessionStore,
-    secret: process.env.SESSION_SECRET || 'airbnb_production_key_random_long_secret_hash',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -129,14 +142,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoint for deployment monitoring
+// Health check endpoint for deployment monitoring (No internal error leak)
 app.get('/health', async (req, res) => {
   try {
     // Quick probe to PostgreSQL
     await prisma.$queryRaw`SELECT 1`;
     res.status(200).json({ status: 'ok', uptime: process.uptime(), db: 'connected' });
   } catch (error) {
-    res.status(503).json({ status: 'degraded', error: error.message });
+    // Log full error internally without leaking database driver details to public response
+    console.error('Health check probe error:', error);
+    res.status(503).json({ status: 'degraded', db: 'disconnected' });
   }
 });
 

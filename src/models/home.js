@@ -64,11 +64,34 @@ module.exports = class Home {
     }
   }
 
-  static async fetchAll(callback) {
+  static async fetchAll(callbackOrOptions, maybeOptions) {
+    let callback;
+    let options = {};
+
+    if (typeof callbackOrOptions === 'function') {
+      callback = callbackOrOptions;
+      options = maybeOptions || {};
+    } else if (typeof callbackOrOptions === 'object' && callbackOrOptions !== null) {
+      options = callbackOrOptions;
+      callback = maybeOptions;
+    }
+
+    const page = Math.max(1, parseInt(options.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(options.limit, 10) || 50));
+    const skip = (page - 1) * limit;
+
     try {
-      const homes = await prisma.home.findMany({
+      const queryOptions = {
         orderBy: { createdAt: 'desc' }
-      });
+      };
+
+      // Support pagination to avoid full table scanning
+      if (options.unlimited !== true) {
+        queryOptions.take = limit;
+        queryOptions.skip = skip;
+      }
+
+      const homes = await prisma.home.findMany(queryOptions);
       if (callback) callback(homes);
       return homes;
     } catch (err) {

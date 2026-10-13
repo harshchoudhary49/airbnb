@@ -3,14 +3,16 @@ const Favorite = require("../models/favorite");
 const Booking = require("../models/booking");
 const Review = require("../models/review");
 const prisma = require("../db/prisma");
+const { getSafeRedirectUrl } = require("../utils/urlUtil");
 
 exports.getIndex = (req, res, next) => {
-  const searchQuery = (req.query.search || '').trim().toLowerCase();
+  const searchQuery = (req.query.search || '').trim().slice(0, 100).toLowerCase();
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
   const userId = req.session.user ? req.session.user.id : null;
 
   Home.fetchAll((registeredHomes) => {
     Favorite.getFavoriteIds(userId, (favoriteIds) => {
-      let homes = registeredHomes;
+      let homes = registeredHomes || [];
       if (searchQuery) {
         homes = homes.filter(
           (h) =>
@@ -23,14 +25,16 @@ exports.getIndex = (req, res, next) => {
         registeredHomes: homes,
         favoriteIds: favoriteIds,
         searchQuery: searchQuery,
+        currentPage: page,
         pageTitle: 'Airbnb - Vacation Rentals & Cabins'
       });
     });
-  });
+  }, { page, limit: 30 });
 };
 
 exports.getHomes = (req, res, next) => {
-  const searchQuery = (req.query.search || '').trim().toLowerCase();
+  const searchQuery = (req.query.search || '').trim().slice(0, 100).toLowerCase();
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
   const userId = req.session.user ? req.session.user.id : null;
 
   Home.fetchAll((registeredHomes) => {
@@ -48,10 +52,11 @@ exports.getHomes = (req, res, next) => {
         registeredHomes: homes,
         favoriteIds: favoriteIds,
         searchQuery: searchQuery,
+        currentPage: page,
         pageTitle: 'All Registered Homes'
       });
     });
-  });
+  }, { page, limit: 30 });
 };
 
 exports.getHomeDetails = async (req, res, next) => {
@@ -121,15 +126,21 @@ exports.postAddReview = async (req, res, next) => {
     }
 
     const parsedRating = parseInt(rating, 10);
-    if (!parsedRating || parsedRating < 1 || parsedRating > 5 || !comment || !comment.trim()) {
+    const cleanedComment = (comment || '').trim();
+
+    if (!parsedRating || parsedRating < 1 || parsedRating > 5 || !cleanedComment) {
       return res.redirect(`/homes/${homeId}?reviewError=${encodeURIComponent('Please select a star rating (1-5) and write a comment.')}#reviews-section`);
+    }
+
+    if (cleanedComment.length > 1000) {
+      return res.redirect(`/homes/${homeId}?reviewError=${encodeURIComponent('Review comment cannot exceed 1000 characters.')}#reviews-section`);
     }
 
     await Review.create({
       homeId,
       userId,
       rating: parsedRating,
-      comment: comment.trim()
+      comment: cleanedComment
     });
 
     res.redirect(`/homes/${homeId}#reviews-section`);
@@ -265,14 +276,34 @@ exports.postReserveHome = async (req, res, next) => {
     const authenticPrice = parseFloat(home.price) || 0;
     const totalAmount = nights * authenticPrice;
 
+    const cleanedGuestName = (guestName || req.session.user.name || '').trim();
+    const cleanedGuestEmail = (guestEmail || req.session.user.email || '').toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!cleanedGuestName || cleanedGuestName.length > 100) {
+      return res.redirect(
+        `/reserve/${homeId}?error=${encodeURIComponent(
+          'Please provide a valid guest name (maximum 100 characters).'
+        )}`
+      );
+    }
+
+    if (!cleanedGuestEmail || !emailRegex.test(cleanedGuestEmail) || cleanedGuestEmail.length > 255) {
+      return res.redirect(
+        `/reserve/${homeId}?error=${encodeURIComponent(
+          'Please provide a valid guest email address.'
+        )}`
+      );
+    }
+
     const booking = new Booking(
       home.id,
       home.houseName,
       authenticPrice,
       home.location,
       home.photoUrl,
-      (guestName || req.session.user.name || '').trim(),
-      (guestEmail || req.session.user.email || '').trim(),
+      cleanedGuestName,
+      cleanedGuestEmail,
       checkIn,
       checkOut,
       parseInt(guestsCount, 10) || 1,
@@ -353,7 +384,7 @@ exports.getfavoritelist = (req, res, next) => {
 
 exports.postAddToFavorites = (req, res, next) => {
   if (!req.session || !req.session.isLoggedIn) {
-    req.session.returnTo = req.get('Referrer') || '/';
+    req.session.returnTo = getSafeRedirectUrl(req.get('Referrer'), req, '/');
     return res.redirect('/login');
   }
 
@@ -361,7 +392,7 @@ exports.postAddToFavorites = (req, res, next) => {
   const userId = req.session.user.id;
 
   Favorite.addToFavorites(userId, homeId, () => {
-    const referrer = req.get('Referrer') || '/favorites';
+    const referrer = getSafeRedirectUrl(req.get('Referrer'), req, '/favorites');
     res.redirect(referrer);
   });
 };
@@ -375,7 +406,7 @@ exports.postRemoveFromFavorites = (req, res, next) => {
   const userId = req.session.user.id;
 
   Favorite.removeFromFavorites(userId, homeId, () => {
-    const referrer = req.get('Referrer') || '/favorites';
+    const referrer = getSafeRedirectUrl(req.get('Referrer'), req, '/favorites');
     res.redirect(referrer);
   });
 };

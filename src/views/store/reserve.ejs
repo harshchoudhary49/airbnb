@@ -72,6 +72,7 @@
                   type="text" 
                   name="guestName" 
                   required 
+                  maxlength="100"
                   value="<%= user && user.name ? user.name : '' %>"
                   placeholder="e.g. Rahul Sharma"
                   class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-800 text-sm shadow-sm"
@@ -84,6 +85,7 @@
                   type="email" 
                   name="guestEmail" 
                   required 
+                  maxlength="255"
                   value="<%= user && user.email ? user.email : '' %>"
                   placeholder="name@example.com"
                   class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-800 text-sm shadow-sm"
@@ -223,8 +225,8 @@
     </script>
 
     <!-- Flatpickr Date Picker Library -->
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script>
+    <script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>" src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
       // Load confirmed bookings from server to disable overlapping nights
       const bookedDataEl = document.getElementById('bookedRangesData');
       const bookedRangesRaw = bookedDataEl ? JSON.parse(bookedDataEl.textContent || '[]') : [];

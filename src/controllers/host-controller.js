@@ -21,6 +21,17 @@ exports.getHostHomes = (req, res, next) => {
   });
 };
 
+// Helper to strictly ensure image URLs start with https://
+const isValidHttpsUrl = (urlStr) => {
+  if (!urlStr || typeof urlStr !== 'string') return false;
+  try {
+    const parsed = new URL(urlStr);
+    return parsed.protocol === 'https:';
+  } catch (e) {
+    return false;
+  }
+};
+
 exports.postAddHome = (req, res, next) => {
   if (!req.session.user) {
     return res.redirect('/login');
@@ -32,6 +43,7 @@ exports.postAddHome = (req, res, next) => {
   const cleanedName = (houseName || '').trim();
   const cleanedLocation = (location || '').trim();
   const cleanedPhoto = (photoUrl || '').trim();
+  const cleanedDesc = (description || '').trim();
   const numericPrice = parseFloat(price);
 
   if (!cleanedName || !cleanedLocation || !cleanedPhoto || isNaN(numericPrice) || numericPrice <= 0) {
@@ -43,13 +55,50 @@ exports.postAddHome = (req, res, next) => {
     });
   }
 
+  // Enforce max lengths
+  if (cleanedName.length > 100) {
+    return res.status(422).render('host/addhome', {
+      pageTitle: 'Add Home to airbnb',
+      editing: false,
+      home: { houseName, price, location, photoUrl, description },
+      errorMessage: 'Property name cannot exceed 100 characters.'
+    });
+  }
+
+  if (cleanedLocation.length > 150) {
+    return res.status(422).render('host/addhome', {
+      pageTitle: 'Add Home to airbnb',
+      editing: false,
+      home: { houseName, price, location, photoUrl, description },
+      errorMessage: 'Location cannot exceed 150 characters.'
+    });
+  }
+
+  if (cleanedPhoto.length > 2000 || !isValidHttpsUrl(cleanedPhoto)) {
+    return res.status(422).render('host/addhome', {
+      pageTitle: 'Add Home to airbnb',
+      editing: false,
+      home: { houseName, price, location, photoUrl, description },
+      errorMessage: 'Photo URL must be a valid, secure URL starting with https:// and under 2000 characters.'
+    });
+  }
+
+  if (cleanedDesc.length > 2000) {
+    return res.status(422).render('host/addhome', {
+      pageTitle: 'Add Home to airbnb',
+      editing: false,
+      home: { houseName, price, location, photoUrl, description },
+      errorMessage: 'Description cannot exceed 2000 characters.'
+    });
+  }
+
   const home = new Home(
     cleanedName,
     numericPrice,
     cleanedLocation,
     'New', // Newly listed property defaults to 'New' until guests leave reviews
     cleanedPhoto,
-    (description || '').trim(),
+    cleanedDesc,
     hostId
   );
 
@@ -110,6 +159,7 @@ exports.postEditHome = (req, res, next) => {
     const cleanedName = (houseName || '').trim();
     const cleanedLocation = (location || '').trim();
     const cleanedPhoto = (photoUrl || '').trim();
+    const cleanedDesc = (description || '').trim();
     const numericPrice = parseFloat(price);
 
     if (!cleanedName || !cleanedLocation || !cleanedPhoto || isNaN(numericPrice) || numericPrice <= 0) {
@@ -121,13 +171,50 @@ exports.postEditHome = (req, res, next) => {
       });
     }
 
+    // Enforce max lengths
+    if (cleanedName.length > 100) {
+      return res.status(422).render('host/edit-home', {
+        pageTitle: 'Edit Listing - ' + (cleanedName || existingHome.houseName),
+        editing: true,
+        home: { id, houseName, price, location, photoUrl, description },
+        errorMessage: 'Property name cannot exceed 100 characters.'
+      });
+    }
+
+    if (cleanedLocation.length > 150) {
+      return res.status(422).render('host/edit-home', {
+        pageTitle: 'Edit Listing - ' + (cleanedName || existingHome.houseName),
+        editing: true,
+        home: { id, houseName, price, location, photoUrl, description },
+        errorMessage: 'Location cannot exceed 150 characters.'
+      });
+    }
+
+    if (cleanedPhoto.length > 2000 || !isValidHttpsUrl(cleanedPhoto)) {
+      return res.status(422).render('host/edit-home', {
+        pageTitle: 'Edit Listing - ' + (cleanedName || existingHome.houseName),
+        editing: true,
+        home: { id, houseName, price, location, photoUrl, description },
+        errorMessage: 'Photo URL must be a valid, secure URL starting with https:// and under 2000 characters.'
+      });
+    }
+
+    if (cleanedDesc.length > 2000) {
+      return res.status(422).render('host/edit-home', {
+        pageTitle: 'Edit Listing - ' + (cleanedName || existingHome.houseName),
+        editing: true,
+        home: { id, houseName, price, location, photoUrl, description },
+        errorMessage: 'Description cannot exceed 2000 characters.'
+      });
+    }
+
     const updatedHome = new Home(
       cleanedName,
       numericPrice,
       cleanedLocation,
       existingHome.rating || 'New', // Preserve authentic rating!
       cleanedPhoto,
-      (description || '').trim(),
+      cleanedDesc,
       currentHostId,
       id
     );

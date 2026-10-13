@@ -35,6 +35,7 @@
                 id="loginEmail"
                 name="email"
                 required
+                maxlength="255"
                 value="<%= typeof oldInput !== 'undefined' && oldInput.email ? oldInput.email : '' %>"
                 placeholder="you@example.com"
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-800"
@@ -48,6 +49,7 @@
                 id="loginPassword"
                 name="password"
                 required
+                maxlength="128"
                 placeholder="••••••••"
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-800"
               />
@@ -97,7 +99,7 @@
       </div>
     </footer>
 
-    <script>
+    <script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
       function fillDemo(email, password) {
         document.getElementById('loginEmail').value = email;
         document.getElementById('loginPassword').value = password;
