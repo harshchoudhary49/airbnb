@@ -1,17 +1,13 @@
-// Load environment variables early
 require('dotenv').config();
 
-// Core Module
 const path = require('path');
-
-// External Module
+const crypto = require('crypto');
 const express = require('express');
 const session = require('express-session');
 const PgSession = require('connect-pg-simple')(session);
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
-// Local Module
 const storeRouter = require('./routes/storeRouter');
 const hostRouter = require('./routes/hostRouter');
 const authRouter = require('./routes/authRouter');
@@ -19,25 +15,21 @@ const rootDir = require('./utils/pathUtil');
 const prisma = require('./db/prisma');
 const csrfProtection = require('./middleware/csrf');
 
-const crypto = require('crypto');
-
-// Validate session secret at startup - Crash immediately if missing to prevent insecure execution
+// Ensure SESSION_SECRET is set before booting
 if (!process.env.SESSION_SECRET || !process.env.SESSION_SECRET.trim()) {
-  console.error('FATAL CONFIGURATION ERROR: SESSION_SECRET environment variable is missing.');
-  console.error('Refusing to start server with hardcoded or fallback secret.');
+  console.error('Missing SESSION_SECRET environment variable. Server cannot start.');
   process.exit(1);
 }
 
 const app = express();
 
-// Generate CSP nonce per request for secure inline scripts
+// Per-request nonce for secure inline scripts
 app.use((req, res, next) => {
   res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
   next();
 });
 
-// Security Headers with Helmet (Protection against Clickjacking, MIME-sniffing, XSS, etc.)
-// Strictly disallows 'unsafe-inline' and 'unsafe-eval' by enforcing cryptographic per-request nonces
+// Helmet security headers & CSP policy
 app.use((req, res, next) => {
   helmet({
     contentSecurityPolicy: {
@@ -77,7 +69,7 @@ app.use((req, res, next) => {
   })(req, res, next);
 });
 
-// Global Rate Limiter to prevent DoS & automated abuse
+// General rate limiter (300 requests per 15 mins)
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
@@ -87,17 +79,17 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// Trust reverse proxy (essential for production deployments like Render, Heroku, AWS, Nginx)
+// Trust proxy headers for Render, Railway, AWS, Nginx
 app.set('trust proxy', 1);
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Request body size limits (prevents payload exhaustion / buffer overflow DoS)
+// Body parsers with payload limits
 app.use(express.urlencoded({ extended: true, limit: '500kb' }));
 app.use(express.json({ limit: '500kb' }));
 
-// Session configuration with persistent PostgreSQL store
+// Session storage backed by PostgreSQL
 let sessionStore;
 if (process.env.DATABASE_URL) {
   try {
@@ -107,7 +99,7 @@ if (process.env.DATABASE_URL) {
       tableName: 'session'
     });
   } catch (err) {
-    console.error('Failed to initialize PostgreSQL session store, falling back to memory store:', err);
+    console.error('Could not connect to PG session store, using memory store instead:', err);
   }
 }
 
@@ -127,10 +119,10 @@ app.use(
   })
 );
 
-// CSRF Protection Middleware
+// CSRF protection for mutating requests
 app.use(csrfProtection);
 
-// Global view variables for authentication state & route tracking
+// Global template variables
 app.use((req, res, next) => {
   res.locals.isLoggedIn = Boolean(req.session && req.session.isLoggedIn);
   res.locals.user = (req.session && req.session.user) || null;
@@ -142,15 +134,13 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoint for deployment monitoring (No internal error leak)
+// Health check endpoint for uptime monitors
 app.get('/health', async (req, res) => {
   try {
-    // Quick probe to PostgreSQL
     await prisma.$queryRaw`SELECT 1`;
     res.status(200).json({ status: 'ok', uptime: process.uptime(), db: 'connected' });
   } catch (error) {
-    // Log full error internally without leaking database driver details to public response
-    console.error('Health check probe error:', error);
+    console.error('Health check DB probe failed:', error);
     res.status(503).json({ status: 'degraded', db: 'disconnected' });
   }
 });
@@ -158,19 +148,19 @@ app.get('/health', async (req, res) => {
 // Static assets
 app.use(express.static(path.join(rootDir, 'public')));
 
-// Mount routers
+// Application routes
 app.use(authRouter);
 app.use(storeRouter);
 app.use('/host', hostRouter);
 
-// 404 Handler
+// 404 handler
 app.use((req, res, next) => {
   res.status(404).render('404', { pageTitle: 'Page Not Found' });
 });
 
-// Global 500 Error Handler
+// Global 500 error handler
 app.use((err, req, res, next) => {
-  console.error('Unhandled Application Error:', err);
+  console.error('Server error:', err);
   res.status(500).render('404', {
     pageTitle: 'Server Error'
   });
@@ -181,13 +171,13 @@ const server = app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on http://localhost:${PORT}`);
 });
 
-// Graceful shutdown handling
+// Graceful shutdown
 const gracefulShutdown = (signal) => {
-  console.log(`Received ${signal}. Gracefully shutting down...`);
+  console.log(`Received ${signal}. Shutting down cleanly...`);
   server.close(async () => {
     console.log('HTTP server closed.');
     await prisma.$disconnect();
-    console.log('PostgreSQL connection closed.');
+    console.log('Database disconnected.');
     process.exit(0);
   });
 };

@@ -176,7 +176,7 @@ exports.getReserveHome = async (req, res, next) => {
       return res.redirect('/homes');
     }
 
-    // Fetch confirmed bookings for this home to disable booked dates in calendar
+    // Find already booked dates to block them out in the calendar
     const confirmedBookings = await prisma.booking.findMany({
       where: {
         homeId: homeId.toString(),
@@ -222,13 +222,13 @@ exports.postReserveHome = async (req, res, next) => {
 
     const userId = req.session.user.id;
 
-    // Retrieve authentic home details from DB to prevent client-side price tampering
+    // Load listing from DB to get the true price
     const home = await Home.findById(homeId);
     if (!home) {
       return res.redirect('/homes');
     }
 
-    // Validate dates: checkIn must be valid, checkOut must be strictly after checkIn
+    // Check-in must come before check-out and be in the future
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
     const today = new Date();
@@ -247,9 +247,7 @@ exports.postReserveHome = async (req, res, next) => {
       );
     }
 
-    // AIRBNB DOUBLE-BOOKING PREVENTER:
-    // Check if any existing confirmed booking overlaps with the selected date range.
-    // Interval overlap condition: newCheckIn < existingCheckOut AND newCheckOut > existingCheckIn
+    // Make sure another booking doesn't overlap these dates
     const confirmedBookings = await prisma.booking.findMany({
       where: {
         homeId: homeId.toString(),
@@ -449,7 +447,7 @@ exports.getSpendAnalyzer = async (req, res, next) => {
       }
       totalNights += nights;
 
-      // Upcoming vs Past spend
+      // Separate upcoming from completed trips
       const isUpcoming = b.checkIn && b.checkIn >= todayStr;
       if (isUpcoming) {
         upcomingSpend += amount;
@@ -457,7 +455,7 @@ exports.getSpendAnalyzer = async (req, res, next) => {
         completedSpend += amount;
       }
 
-      // City / Location aggregation
+      // Tally totals by city
       const city = (b.home && b.home.location ? b.home.location : 'Other').trim();
       if (!cityMap[city]) {
         cityMap[city] = { city, totalAmount: 0, count: 0, nights: 0 };
@@ -466,7 +464,7 @@ exports.getSpendAnalyzer = async (req, res, next) => {
       cityMap[city].count += 1;
       cityMap[city].nights += nights;
 
-      // Monthly aggregation
+      // Tally totals by month
       const bookingDate = b.checkIn ? new Date(b.checkIn) : new Date(b.createdAt);
       const monthKey = !isNaN(bookingDate.getTime())
         ? bookingDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
@@ -493,7 +491,7 @@ exports.getSpendAnalyzer = async (req, res, next) => {
     const avgNightlyRate = totalNights > 0 ? Math.round(totalSpend / totalNights) : 0;
     const avgTripCost = totalBookings > 0 ? Math.round(totalSpend / totalBookings) : 0;
 
-    // Sort cities by amount descending
+    // Sort cities by spend (highest first)
     const cityBreakdown = Object.values(cityMap)
       .sort((a, b) => b.totalAmount - a.totalAmount)
       .map((c) => ({
@@ -503,19 +501,19 @@ exports.getSpendAnalyzer = async (req, res, next) => {
 
     const topDestination = cityBreakdown.length > 0 ? cityBreakdown[0].city : 'None';
 
-    // Sort monthly trend chronologically
+    // Sort monthly trend in calendar order
     const monthlyTrend = Object.values(monthlyMap).sort((a, b) => a.sortTime - b.sortTime);
 
-    // Compute percentage of spend per trip for table
+    // Compute share of total spend for each trip
     const enrichedBookings = processedBookings.map((b) => ({
       ...b,
       spendPercentage: totalSpend > 0 ? ((b.totalAmount / totalSpend) * 100).toFixed(1) : 0
     }));
 
-    // Default target budget
+    // Target spend budget benchmark
     const targetBudget = 60000;
 
-    // Compute Host Revenue metrics if the logged-in user is a Host
+    // Calculate host earnings if viewing as host
     let hostMetrics = null;
     let hostBookings = [];
     let propertyBreakdown = [];
@@ -559,7 +557,7 @@ exports.getSpendAnalyzer = async (req, res, next) => {
           completedRevenue += amount;
         }
 
-        // Property aggregation
+        // Tally revenue by property
         const propName = (b.home && b.home.houseName ? b.home.houseName : 'Property').trim();
         if (!propMap[propName]) {
           propMap[propName] = {
@@ -575,7 +573,7 @@ exports.getSpendAnalyzer = async (req, res, next) => {
         propMap[propName].bookingsCount += 1;
         propMap[propName].nightsCount += nights;
 
-        // Monthly revenue aggregation
+        // Tally revenue by month
         const bookingDate = b.checkIn ? new Date(b.checkIn) : new Date(b.createdAt);
         const monthKey = !isNaN(bookingDate.getTime())
           ? bookingDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })

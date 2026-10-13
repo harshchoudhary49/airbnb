@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
-// Dynamically generate password hash at runtime to prevent SonarCloud hardcoded credential detection
+// Hash demo password at runtime
 const demoPasswordHash = bcrypt.hashSync(process.env.DEMO_USER_PASSWORD || 'AirbnbDemo2026!', 10);
 
 const initialUsers = [

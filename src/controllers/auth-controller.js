@@ -29,7 +29,7 @@ exports.postLogin = (req, res, next) => {
     });
   }
 
-  // Max length checks to prevent input buffer exhaustion
+  // Check field lengths
   if (cleanedEmail.length > 255 || cleanedPassword.length > 128) {
     return res.status(422).render('auth/login', {
       pageTitle: 'Log In - Airbnb',
@@ -65,7 +65,7 @@ exports.postLogin = (req, res, next) => {
             req.session.returnTo ||
             (user.userType === 'host' ? '/host/host-home-list' : '/');
           delete req.session.returnTo;
-          // Prevent Open Redirect via stored returnTo
+          // Ensure safe internal redirect
           const safeTarget = getSafeRedirectUrl(
             rawTarget,
             req,
@@ -120,7 +120,7 @@ exports.postSignup = (req, res, next) => {
     });
   }
 
-  // Email format validation
+  // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(cleanedEmail)) {
     return res.status(422).render('auth/signup', {
@@ -130,7 +130,7 @@ exports.postSignup = (req, res, next) => {
     });
   }
 
-  // Max length checks
+  // Check field lengths
   if (cleanedName.length > 100) {
     return res.status(422).render('auth/signup', {
       pageTitle: 'Sign Up - Airbnb',
@@ -155,7 +155,7 @@ exports.postSignup = (req, res, next) => {
     });
   }
 
-  // Password complexity: minimum 8 characters, at least 1 uppercase, 1 lowercase, 1 digit
+  // Enforce password requirements (min 8 chars, mixed case, number)
   const passwordComplexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
   if (!passwordComplexityRegex.test(cleanedPassword)) {
     return res.status(422).render('auth/signup', {
@@ -187,7 +187,7 @@ exports.postSignup = (req, res, next) => {
           });
         }
 
-        // Auto login after signup
+        // Log in automatically after registration
         req.session.isLoggedIn = true;
         req.session.user = {
           id: savedUser.id,

@@ -1,5 +1,4 @@
-// Core Module
 const path = require('path');
 
-// Points reliably to the 'src' directory
+// Root path to the src directory
 module.exports = path.join(__dirname, '..');

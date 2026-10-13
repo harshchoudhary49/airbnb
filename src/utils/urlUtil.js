@@ -1,8 +1,4 @@
-/**
- * Safe Redirect URL Validator
- * Prevents Open Redirect vulnerabilities by ensuring target URLs
- * are local relative paths and not external or malformed URLs.
- */
+// Sanitizes redirect URLs so they only point to internal pages
 exports.getSafeRedirectUrl = (targetUrl, req, fallback = '/') => {
   if (!targetUrl || typeof targetUrl !== 'string') {
     return fallback;
@@ -10,12 +6,12 @@ exports.getSafeRedirectUrl = (targetUrl, req, fallback = '/') => {
 
   const trimmed = targetUrl.trim();
 
-  // Strictly allow relative paths that start with '/' and not '//' or '/\'
+  // Allow relative paths (e.g. /homes, /bookings)
   if (trimmed.startsWith('/') && !trimmed.startsWith('//') && !trimmed.startsWith('/\\')) {
     return trimmed;
   }
 
-  // If absolute URL, ensure it strictly matches the current application host
+  // If given a full URL, make sure the host matches our own
   try {
     const parsed = new URL(trimmed);
     const host = req ? req.get('host') : null;
@@ -23,7 +19,7 @@ exports.getSafeRedirectUrl = (targetUrl, req, fallback = '/') => {
       return parsed.pathname + parsed.search + parsed.hash;
     }
   } catch (e) {
-    // Malformed URL, fallback
+    // Malformed URL
   }
 
   return fallback;

@@ -1,12 +1,10 @@
-// External Module
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const authRouter = express.Router();
 
-// Local Module
 const authController = require('../controllers/auth-controller');
 
-// Stricter rate limiter for authentication routes (prevent credential stuffing / brute-force)
+// Limit auth attempts to protect against brute-force attacks
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 15,

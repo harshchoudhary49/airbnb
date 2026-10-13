@@ -1,29 +1,26 @@
 const crypto = require('crypto');
 
-/**
- * Session-based CSRF Protection Middleware
- * Generates a cryptographically strong token per session and verifies it on state-changing methods.
- */
+// Validates CSRF tokens on state-changing requests
 module.exports = (req, res, next) => {
   if (!req.session) {
     return next();
   }
 
-  // Ensure a CSRF token exists for the current user session
+  // Create token if one doesn't exist yet
   if (!req.session.csrfToken) {
     req.session.csrfToken = crypto.randomBytes(32).toString('hex');
   }
 
-  // Expose the CSRF token to all templates/views
+  // Make token available to templates
   res.locals.csrfToken = req.session.csrfToken;
 
-  // Safe HTTP methods do not mutate state
+  // Read-only requests are safe to pass through
   const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
   if (safeMethods.includes(req.method)) {
     return next();
   }
 
-  // Verify the CSRF token on mutating requests (POST, PUT, DELETE, PATCH)
+  // Check incoming token against the session token
   const incomingToken =
     (req.body && req.body._csrf) ||
     req.headers['x-csrf-token'] ||

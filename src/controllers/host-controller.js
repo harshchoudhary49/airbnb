@@ -21,7 +21,7 @@ exports.getHostHomes = (req, res, next) => {
   });
 };
 
-// Helper to strictly ensure image URLs start with https://
+// Check that an image URL uses HTTPS
 const isValidHttpsUrl = (urlStr) => {
   if (!urlStr || typeof urlStr !== 'string') return false;
   try {
@@ -39,7 +39,7 @@ exports.postAddHome = (req, res, next) => {
   const hostId = req.session.user.id;
   const { houseName, price, location, photoUrl, description } = req.body;
 
-  // Sanitize and validate inputs
+  // Sanitize form inputs
   const cleanedName = (houseName || '').trim();
   const cleanedLocation = (location || '').trim();
   const cleanedPhoto = (photoUrl || '').trim();
@@ -55,7 +55,7 @@ exports.postAddHome = (req, res, next) => {
     });
   }
 
-  // Enforce max lengths
+  // Validate field lengths
   if (cleanedName.length > 100) {
     return res.status(422).render('host/addhome', {
       pageTitle: 'Add Home to airbnb',
@@ -96,7 +96,7 @@ exports.postAddHome = (req, res, next) => {
     cleanedName,
     numericPrice,
     cleanedLocation,
-    'New', // Newly listed property defaults to 'New' until guests leave reviews
+    'New', // Default rating for new listings
     cleanedPhoto,
     cleanedDesc,
     hostId
@@ -120,9 +120,9 @@ exports.getEditHome = (req, res, next) => {
 
   Home.findById(homeId, (home) => {
     if (!home) {
-      return res.redirect('/host/host-home-list');
+      return res.redirect('/host-home-list');
     }
-    // Verify property ownership
+    // Host can only edit their own listings
     if (home.hostId !== currentHostId) {
       return res.status(403).render('403', {
         pageTitle: 'Forbidden',
@@ -148,7 +148,7 @@ exports.postEditHome = (req, res, next) => {
     if (!existingHome) {
       return res.redirect('/host/host-home-list');
     }
-    // Verify ownership
+    // Host can only edit their own listings
     if (existingHome.hostId !== currentHostId) {
       return res.status(403).render('403', {
         pageTitle: 'Forbidden',
@@ -171,7 +171,7 @@ exports.postEditHome = (req, res, next) => {
       });
     }
 
-    // Enforce max lengths
+    // Validate field lengths
     if (cleanedName.length > 100) {
       return res.status(422).render('host/edit-home', {
         pageTitle: 'Edit Listing - ' + (cleanedName || existingHome.houseName),
@@ -212,7 +212,7 @@ exports.postEditHome = (req, res, next) => {
       cleanedName,
       numericPrice,
       cleanedLocation,
-      existingHome.rating || 'New', // Preserve authentic rating!
+      existingHome.rating || 'New', // Keep existing rating
       cleanedPhoto,
       cleanedDesc,
       currentHostId,

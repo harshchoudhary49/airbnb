@@ -14,7 +14,7 @@ module.exports = (req, res, next) => {
     return next();
   }
 
-  // If user is a guest trying to access host areas
+  // Guests don't have host access
   res.status(403).render('403', {
     pageTitle: 'Host Access Required',
     message: 'You need a Host account to access property management features.'

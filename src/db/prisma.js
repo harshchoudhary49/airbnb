@@ -1,7 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 
-// PrismaClient is attached to the global object in development to prevent
-// exhausting your database connection limit during hot-reloads.
+// Keep a single Prisma instance across hot reloads in development
 const globalForPrisma = global;
 
 const prisma = globalForPrisma.prisma || new PrismaClient({

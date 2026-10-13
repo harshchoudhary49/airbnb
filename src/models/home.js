@@ -27,7 +27,7 @@ module.exports = class Home {
     try {
       let savedHome;
       if (this.id) {
-        // Edit / update existing home
+        // Update existing listing
         savedHome = await prisma.home.update({
           where: { id: this.id.toString() },
           data: {
@@ -41,7 +41,7 @@ module.exports = class Home {
           }
         });
       } else {
-        // New home registration
+        // Create new listing
         savedHome = await prisma.home.create({
           data: {
             houseName: this.houseName,
@@ -85,7 +85,7 @@ module.exports = class Home {
         orderBy: { createdAt: 'desc' }
       };
 
-      // Support pagination to avoid full table scanning
+      // Paginate results
       if (options.unlimited !== true) {
         queryOptions.take = limit;
         queryOptions.skip = skip;
@@ -141,7 +141,7 @@ module.exports = class Home {
         return;
       }
 
-      // Check ownership if hostId provided
+      // Verify ownership before deleting
       if (hostId) {
         const home = await prisma.home.findUnique({ where: { id: id.toString() } });
         if (!home) {

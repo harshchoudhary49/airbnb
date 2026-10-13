@@ -1,83 +1,181 @@
-<header class="bg-red-500 text-white p-3.5 shadow-md sticky top-0 z-50">
-  <nav class="container mx-auto flex flex-wrap justify-between items-center gap-3">
-    <!-- Brand Logo -->
-    <a href="/" class="flex items-center space-x-2 text-2xl font-bold hover:opacity-90 transition">
-      <i class="fa-brands fa-airbnb text-3xl"></i>
-      <span>airbnb</span>
-    </a>
+<header class="bg-red-500 text-white shadow-md sticky top-0 z-50">
+  <div class="container mx-auto px-4 py-3">
+    <div class="flex justify-between items-center">
+      <!-- Brand Logo -->
+      <a href="/" class="flex items-center space-x-2 text-2xl font-bold hover:opacity-90 transition">
+        <i class="fa-brands fa-airbnb text-3xl"></i>
+        <span>airbnb</span>
+      </a>
 
-    <!-- Center Navigation Links -->
-    <ul class="flex flex-wrap items-center space-x-1 md:space-x-2 text-sm font-medium">
-      <li>
-        <a href="/" class="<%= typeof currentPath !== 'undefined' && currentPath === '/' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg transition duration-200">Explore</a>
-      </li>
-      <li>
-        <a href="/homes" class="<%= typeof currentPath !== 'undefined' && currentPath === '/homes' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg transition duration-200">Home List</a>
-      </li>
+      <!-- Desktop Navigation Links (Visible on large screens) -->
+      <div class="hidden lg:flex items-center gap-1.5 text-sm font-medium">
+        <a href="/" class="<%= typeof currentPath !== 'undefined' && currentPath === '/' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg transition duration-200">
+          Explore
+        </a>
+        <a href="/homes" class="<%= typeof currentPath !== 'undefined' && currentPath === '/homes' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg transition duration-200">
+          Home List
+        </a>
 
-      <% if (isLoggedIn) { %>
-        <li>
+        <% if (isLoggedIn) { %>
           <a href="/bookings" class="<%= typeof currentPath !== 'undefined' && currentPath === '/bookings' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg transition duration-200">
             <i class="fas fa-calendar-check mr-1"></i>My Bookings
           </a>
-        </li>
-        <li>
           <a href="/spend-analyzer" class="<%= typeof currentPath !== 'undefined' && currentPath === '/spend-analyzer' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg transition duration-200">
             <i class="fas fa-chart-pie mr-1"></i>Spend Analyzer
           </a>
-        </li>
-        <li>
           <a href="/favorites" class="<%= typeof currentPath !== 'undefined' && currentPath === '/favorites' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg transition duration-200">
             <i class="fas fa-heart mr-1"></i>My Favorites
           </a>
-        </li>
-      <% } %>
+        <% } %>
 
-      <% if (isHost) { %>
-        <li class="border-l border-red-400 pl-2">
+        <% if (isHost) { %>
+          <span class="h-4 w-px bg-red-400 mx-1"></span>
           <a href="/host/host-home-list" class="<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/host/host-home-list') ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg transition duration-200">
-            <i class="fas fa-chart-pie mr-1"></i>Host Dashboard
+            <i class="fas fa-house-user mr-1"></i>Host Hub
           </a>
-        </li>
-        <li>
           <a href="/spend-analyzer?tab=revenue" class="hover:bg-red-400 py-1.5 px-3 rounded-lg transition duration-200">
-            <i class="fas fa-sack-dollar mr-1"></i>Host Revenue
+            <i class="fas fa-sack-dollar mr-1"></i>Revenue
           </a>
-        </li>
-        <li>
           <a href="/host/add-home" class="<%= typeof currentPath !== 'undefined' && currentPath === '/host/add-home' ? 'bg-gray-100 text-red-600 font-bold' : 'bg-white text-red-500 font-bold hover:bg-gray-100' %> py-1.5 px-3 rounded-lg shadow-sm transition duration-200">
             <i class="fas fa-plus mr-1"></i>Add Home
           </a>
-        </li>
-      <% } %>
-    </ul>
+        <% } %>
+      </div>
 
-    <!-- Auth Actions (Right Side) -->
-    <div class="flex items-center space-x-2 text-sm">
-      <% if (!isLoggedIn) { %>
-        <a href="/login" class="<%= typeof currentPath !== 'undefined' && currentPath === '/login' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg font-medium transition duration-200">
-          Log In
-        </a>
-        <a href="/signup" class="<%= typeof currentPath !== 'undefined' && currentPath === '/signup' ? 'bg-gray-100' : 'bg-white hover:bg-gray-100' %> text-red-500 font-bold py-1.5 px-3.5 rounded-lg shadow-sm transition duration-200">
-          Sign Up
-        </a>
-      <% } else { %>
-        <div class="flex items-center space-x-3 bg-red-600/60 py-1 px-3 rounded-xl backdrop-blur-sm border border-red-400/50">
-          <div class="text-left text-xs">
-            <span class="font-bold block text-white leading-tight"><%= user && user.name ? user.name : 'User' %></span>
-            <span class="text-red-200 uppercase tracking-widest text-[10px] font-semibold"><%= user && user.userType ? user.userType : 'Member' %></span>
+      <!-- Desktop Auth Actions -->
+      <div class="hidden lg:flex items-center gap-2 text-sm">
+        <% if (!isLoggedIn) { %>
+          <a href="/login" class="<%= typeof currentPath !== 'undefined' && currentPath === '/login' ? 'bg-red-600 font-bold' : 'hover:bg-red-400' %> py-1.5 px-3 rounded-lg font-medium transition duration-200">
+            Log In
+          </a>
+          <a href="/signup" class="<%= typeof currentPath !== 'undefined' && currentPath === '/signup' ? 'bg-gray-100' : 'bg-white hover:bg-gray-100' %> text-red-500 font-bold py-1.5 px-3.5 rounded-lg shadow-sm transition duration-200">
+            Sign Up
+          </a>
+        <% } else { %>
+          <div class="flex items-center gap-3 bg-red-600/60 py-1 px-3 rounded-xl backdrop-blur-sm border border-red-400/50">
+            <div class="text-left text-xs">
+              <span class="font-bold block text-white leading-tight"><%= user && user.name ? user.name : 'User' %></span>
+              <span class="text-red-200 uppercase tracking-widest text-[10px] font-semibold"><%= user && user.userType ? user.userType : 'Member' %></span>
+            </div>
+            <form action="/logout" method="POST" class="inline m-0">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button 
+                type="submit" 
+                title="Log Out"
+                class="text-xs bg-white text-red-600 hover:bg-gray-100 font-bold py-1 px-2.5 rounded-md transition shadow-sm cursor-pointer">
+                <i class="fas fa-sign-out-alt"></i>
+              </button>
+            </form>
           </div>
-          <form action="/logout" method="POST" class="inline m-0">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-            <button 
-              type="submit" 
-              title="Log Out"
-              class="text-xs bg-white text-red-600 hover:bg-gray-100 font-bold py-1 px-2.5 rounded-md transition shadow-sm cursor-pointer">
-              <i class="fas fa-sign-out-alt"></i>
-            </button>
-          </form>
-        </div>
-      <% } %>
+        <% } %>
+      </div>
+
+      <!-- Mobile Hamburger Button & Profile Pill -->
+      <div class="lg:hidden flex items-center gap-2">
+        <% if (isLoggedIn) { %>
+          <span class="text-xs font-semibold bg-red-600/70 px-2.5 py-1 rounded-lg border border-red-400/40">
+            <%= user && user.name ? user.name.split(' ')[0] : 'User' %>
+          </span>
+        <% } %>
+        <button 
+          id="mobileMenuBtn" 
+          type="button" 
+          aria-label="Toggle Navigation Menu"
+          class="p-2 text-white hover:bg-red-600 rounded-lg focus:outline-none transition cursor-pointer">
+          <i id="menuIcon" class="fas fa-bars text-xl"></i>
+        </button>
+      </div>
     </div>
-  </nav>
+
+    <!-- Mobile Drawer / Dropdown Navigation (Hidden by default, toggled via hamburger) -->
+    <div id="mobileMenu" class="hidden lg:hidden pt-3 pb-2 border-t border-red-400/50 mt-3 space-y-2.5">
+      <div class="grid grid-cols-2 gap-2 text-sm font-medium">
+        <a href="/" class="<%= typeof currentPath !== 'undefined' && currentPath === '/' ? 'bg-red-600 font-bold' : 'hover:bg-red-600' %> flex items-center gap-2 py-2 px-3 rounded-xl transition">
+          <i class="fas fa-compass"></i> Explore
+        </a>
+        <a href="/homes" class="<%= typeof currentPath !== 'undefined' && currentPath === '/homes' ? 'bg-red-600 font-bold' : 'hover:bg-red-600' %> flex items-center gap-2 py-2 px-3 rounded-xl transition">
+          <i class="fas fa-house"></i> All Homes
+        </a>
+
+        <% if (isLoggedIn) { %>
+          <a href="/bookings" class="<%= typeof currentPath !== 'undefined' && currentPath === '/bookings' ? 'bg-red-600 font-bold' : 'hover:bg-red-600' %> flex items-center gap-2 py-2 px-3 rounded-xl transition">
+            <i class="fas fa-calendar-check"></i> Bookings
+          </a>
+          <a href="/spend-analyzer" class="<%= typeof currentPath !== 'undefined' && currentPath === '/spend-analyzer' ? 'bg-red-600 font-bold' : 'hover:bg-red-600' %> flex items-center gap-2 py-2 px-3 rounded-xl transition">
+            <i class="fas fa-chart-pie"></i> Spend Analyzer
+          </a>
+          <a href="/favorites" class="<%= typeof currentPath !== 'undefined' && currentPath === '/favorites' ? 'bg-red-600 font-bold' : 'hover:bg-red-600' %> flex items-center gap-2 py-2 px-3 rounded-xl transition">
+            <i class="fas fa-heart"></i> Favorites
+          </a>
+        <% } %>
+
+        <% if (isHost) { %>
+          <a href="/host/host-home-list" class="<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/host/host-home-list') ? 'bg-red-600 font-bold' : 'hover:bg-red-600' %> flex items-center gap-2 py-2 px-3 rounded-xl transition">
+            <i class="fas fa-house-user"></i> Host Hub
+          </a>
+          <a href="/spend-analyzer?tab=revenue" class="flex items-center gap-2 py-2 px-3 rounded-xl hover:bg-red-600 transition">
+            <i class="fas fa-sack-dollar"></i> Revenue
+          </a>
+          <a href="/host/add-home" class="flex items-center gap-2 py-2 px-3 rounded-xl bg-white text-red-600 font-bold transition">
+            <i class="fas fa-plus"></i> Add Home
+          </a>
+        <% } %>
+      </div>
+
+      <!-- Mobile Profile & Authentication Actions -->
+      <div class="pt-2 border-t border-red-400/40">
+        <% if (!isLoggedIn) { %>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <a href="/login" class="text-center py-2 px-3 rounded-xl bg-red-600 hover:bg-red-700 font-bold text-sm transition">
+              Log In
+            </a>
+            <a href="/signup" class="text-center py-2 px-3 rounded-xl bg-white text-red-600 hover:bg-gray-100 font-bold text-sm shadow-sm transition">
+              Sign Up
+            </a>
+          </div>
+        <% } else { %>
+          <div class="flex items-center justify-between bg-red-600/70 p-2.5 rounded-xl border border-red-400/40">
+            <div>
+              <div class="font-bold text-sm leading-tight"><%= user && user.name ? user.name : 'User' %></div>
+              <div class="text-[11px] text-red-200 capitalize"><%= user && user.userType ? user.userType : 'guest' %> account</div>
+            </div>
+            <form action="/logout" method="POST" class="m-0">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button 
+                type="submit" 
+                class="bg-white text-red-600 hover:bg-gray-100 text-xs font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5 shadow transition cursor-pointer">
+                <i class="fas fa-sign-out-alt"></i> Log Out
+              </button>
+            </form>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
 </header>
+
+<script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
+  (function() {
+    const btn = document.getElementById('mobileMenuBtn');
+    const menu = document.getElementById('mobileMenu');
+    const icon = document.getElementById('menuIcon');
+    if (btn && menu) {
+      btn.addEventListener('click', function() {
+        const isHidden = menu.classList.contains('hidden');
+        if (isHidden) {
+          menu.classList.remove('hidden');
+          if (icon) {
+            icon.classList.remove('fa-bars');
+            icon.classList.add('fa-times');
+          }
+        } else {
+          menu.classList.add('hidden');
+          if (icon) {
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+          }
+        }
+      });
+    }
+  })();
+</script>

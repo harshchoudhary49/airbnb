@@ -26,7 +26,7 @@ module.exports = class Review {
         }
       });
 
-      // Recalculate average rating for the home and update home.rating
+      // Update the home's average rating
       await Review.syncHomeRating(homeId);
 
       return newReview;
@@ -97,7 +97,7 @@ module.exports = class Review {
         where: { id: id.toString() }
       });
 
-      // Recalculate home rating after deletion
+      // Refresh the home's average rating after deleting a review
       await Review.syncHomeRating(review.homeId);
       return true;
     } catch (err) {
